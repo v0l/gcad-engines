@@ -1,9 +1,9 @@
 #!/bin/sh
 # Prepare both bindings without requiring either resource to exist already.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$root"
-gcad=${GCAD:-"$root/target/debug/gcad"}
+gcad=${GCAD:?set GCAD to a gcad built with --features game-assets}
 [ -f "$gcad" ] || gcad="$gcad.exe"
 [ -f "$gcad" ] || { echo 'Build gcad with --features game-assets, or set GCAD' >&2; exit 1; }
 fixture=examples/game-assets/plate-consumer-skinned.gasset

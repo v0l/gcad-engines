@@ -11,7 +11,7 @@ APIs. No plugins or package dependencies are required.
 
 ```sh
 GODOT=/absolute/path/to/godot GODOT_VERSION=EXACT_VERSION_OUTPUT \
-  sh tools/game-assets-godot/check-import.sh source.glb new-project
+  sh godot/check-import.sh source.glb new-project
 ```
 
 Set `GODOT_VERSION` to the exact output from that executable's `--version`.

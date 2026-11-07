@@ -18,7 +18,7 @@ pinned dependency source repositories and notices are included. See
 Some notices are distributed as their original source headers to
 retain complete embedded copyright/license text.
 
-Build with `sh tools/game-assets.sh package-helper NEW_OUTPUT` from the matching
+Build with `sh game-assets.sh package-helper NEW_OUTPUT` from the matching
 gcad source checkout. This uses existing pinned dependency checkouts; it does not
 download or install dependencies. Windows Release builds use the static MSVC
 runtime. Linux runtime dependencies still require platform verification.

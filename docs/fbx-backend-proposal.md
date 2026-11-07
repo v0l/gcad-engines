@@ -218,7 +218,7 @@ Preserve that diagnostic; do not replace it with the adapter result. A selected
 engine must decide and implement its normal/tangent deformation convention and
 validate normal-map orientation, alpha, sidedness, colour spaces and packed maps.
 Evidence directories and reproduction commands are recorded in
-[the native harness README](../tools/game-assets-fbx/README.md).
+[the native harness README](../fbx-helper/README.md).
 
 ## Build, packaging and license inventory
 

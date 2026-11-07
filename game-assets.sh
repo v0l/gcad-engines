@@ -1,12 +1,12 @@
 #!/bin/sh
 # Development entry points for the optional game-asset pipeline.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$root"
 fail() { printf '%s\n' "$*" >&2; exit 1; }
 usage() {
     cat <<'EOF'
-Usage: sh tools/game-assets.sh COMMAND [ARGS]
+Usage: sh game-assets.sh COMMAND [ARGS]
   prepare-fixtures                         Preserve/create bindings, check fixtures
   build-probes [Debug|Release] [base|v10|v11|v12] Build native import/FBX probes
   package-helper NEW_OUTPUT                Build experimental Release helper bundle
@@ -18,7 +18,7 @@ Use GCAD to select a built gcad executable, CMAKE to select CMake, and
 ASSIMP_SOURCE/UFBX_SOURCE to select existing pinned dependency checkouts.
 GPU backends default to dx12 and vulkan; select vulkan for Linux.
 Cargo may fetch locked dependencies. Native probe executables also
-expose their individual audit modes directly; see tools/game-assets-fbx/README.md.
+expose their individual audit modes directly; see fbx-helper/README.md.
 EOF
 }
 check_pin() {
@@ -41,7 +41,7 @@ case "$command" in
 --help|-h) usage ;;
 prepare-fixtures)
     [ "$#" -eq 0 ] || fail 'prepare-fixtures takes no arguments; use GCAD for the executable'
-    gcad=${GCAD:-"$root/target/debug/gcad"}
+    gcad=${GCAD:?set GCAD to a gcad built with --features game-assets}
     [ -f "$gcad" ] || gcad="$gcad.exe"
     [ -f "$gcad" ] || fail 'Build gcad with --features game-assets, or set GCAD'
     mkdir -p target
@@ -79,7 +79,7 @@ plate-twist-chain|plate|game-asset-plate-twist-chain.weights.json|bone0,bone1,bo
 plate-twist-sliced|plate|game-asset-plate-twist-sliced.weights.json|bone0,bone1,bone2,bone3,bone4|--chain|y,-15,-7.5,0,7.5,15
 plate-twist-sliced-fine|plate|game-asset-plate-twist-sliced-fine.weights.json|bone0,bone1,bone2,bone3,bone4|--chain|y,-15,-7.5,0,7.5,15
 EOF
-    GCAD="$gcad" sh tools/game-assets-consumer-fixture.sh
+    GCAD="$gcad" sh consumer-fixture.sh
     for fixture in examples/game-assets/*.gasset; do "$gcad" check "$fixture"; done
     ;;
 build-probes)
@@ -99,7 +99,7 @@ build-probes)
         v12) expected=783bf12bee4103422f8e8d2f74b2f17ae4dd93109b25266cd67baa9838340bf9 ;;
         esac
         extension="$root/target/game-assets-tools/assimp-material-extension-$variant"
-        patch="$root/tools/game-assets-fbx/experimental-material-properties-$variant.patch"
+        patch="$root/fbx-helper/experimental-material-properties-$variant.patch"
         check_hash "$patch" "$expected"
         if [ ! -e "$extension" ]; then
             git -C "$assimp" worktree add --detach "$extension" a4643cbd30d3088bbff312d3cc2652f514fb97c0
@@ -112,7 +112,7 @@ build-probes)
         ;;
     *) fail 'Use base, v10, v11 or v12';;
     esac
-    "${CMAKE:-cmake}" -S tools/game-assets-fbx -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" "-DCMAKE_BUILD_TYPE=$configuration"
+    "${CMAKE:-cmake}" -S fbx-helper -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" "-DCMAKE_BUILD_TYPE=$configuration"
     "${CMAKE:-cmake}" --build "$build" --config "$configuration" --parallel 8
     ;;
 package-helper)
@@ -125,13 +125,13 @@ package-helper)
     [ "${actual%% *}" = 783bf12bee4103422f8e8d2f74b2f17ae4dd93109b25266cd67baa9838340bf9 ] || fail 'Unreviewed Assimp patch'
     check_pin "$ufbx" 5955c5c0b042ac2dc6f32955ab206aaec0620cfc
     build="$root/target/game-assets-tools/helper-package-build"
-    "${CMAKE:-cmake}" -S tools/game-assets-fbx -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" \
+    "${CMAKE:-cmake}" -S fbx-helper -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DUSE_STATIC_CRT=ON
     "${CMAKE:-cmake}" --build "$build" --config Release --target gcad_fbx_helper --parallel 8
     helper="$build/Release/gcad_fbx_helper.exe"
     [ -f "$helper" ] || helper="$build/gcad_fbx_helper"
     "${CMAKE:-cmake}" "-DHELPER=$helper" "-DOUTPUT=$1" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" \
-        -P tools/game-assets-fbx/package_helper.cmake
+        -P fbx-helper/package_helper.cmake
     ;;
 verify-gpu|verify-renderer)
     [ "$#" -ge 1 ] || fail 'A new output directory is required'
@@ -182,7 +182,7 @@ reproduce-renderer)
     candidate="$output/egui_bench-0.9.2"
     git -C "$candidate" init -q
     while read -r filename pin; do
-        patch="$root/tools/game-assets-renderer/$filename"
+        patch="$root/renderer-patches/$filename"
         check_hash "$patch" "$pin"
         git -C "$candidate" apply --check "$patch"
         git -C "$candidate" apply "$patch"

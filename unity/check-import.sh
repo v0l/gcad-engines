@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reference fixture consumer test; no packages, plugins or engine installs.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 [ "$#" -eq 2 ] || { echo 'Usage: UNITY=... UNITY_VERSION=... sh check-import.sh FBX_PACKAGE NEW_PROJECT' >&2; exit 1; }
 : "${UNITY:?Select an installed Unity executable}"
 : "${UNITY_VERSION:?Specify its exact editor version}"
@@ -104,13 +104,13 @@ if [ -n "${GCAD_LOD_COST_BASELINE:-}" ]; then
     cp -R "$GCAD_LOD_COST_BASELINE/textures" "$project/Assets/Baseline/"
 fi
 if [ -n "${GCAD_LOD_REFERENCE:-}" ]; then cp "$GCAD_LOD_REFERENCE" "$project/lod-reference.glb"; fi
-cp "$root/tools/game-assets-unity/"*.cs "$project/Assets/Editor/"
+cp "$root/unity/"*.cs "$project/Assets/Editor/"
 mkdir -p "$project/Assets/GcadRuntime"
-cp "$root/tools/game-assets-unity/Runtime/"*.cs "$project/Assets/GcadRuntime/"
+cp "$root/unity/Runtime/"*.cs "$project/Assets/GcadRuntime/"
 mkdir -p "$project/Assets/GcadPlayerTest"
-cp "$root/tools/game-assets-unity/PlayerTest/"*.cs "$project/Assets/GcadPlayerTest/"
+cp "$root/unity/PlayerTest/"*.cs "$project/Assets/GcadPlayerTest/"
 mkdir -p "$project/Assets/GcadShaders"
-cp "$root/tools/game-assets-unity/"*.shader "$root/tools/game-assets-unity/"*.cginc "$project/Assets/GcadShaders/"
+cp "$root/unity/"*.shader "$root/unity/"*.cginc "$project/Assets/GcadShaders/"
 cp "$package/model.fbx" "$project/Assets/Fixture/"
 if [ -f "$package/gcad-shaders.json" ]; then cp "$package/gcad-shaders.json" "$project/Assets/Fixture/"; fi
 if [ -f "$package/gcad-root-motion.json" ]; then cp "$package/gcad-root-motion.json" "$project/Assets/Fixture/"; fi

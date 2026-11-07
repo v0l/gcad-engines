@@ -80,11 +80,11 @@ not engine material/render acceptance. Next action: consume this contract
 in the explicit Unity adapter and validate its converted textures and shaders.
 
 The C++ probes exercise Assimp import/export and independent ufbx readback.
-Build them with `sh tools/game-assets.sh build-probes Release base` or the `v10`
+Build them with `sh game-assets.sh build-probes Release base` or the `v10`
 variant. See [development commands](../game-assets.md) for prerequisites, Debug
 builds, fixture preparation and direct audit commands. The optional production
 helper approach is approved. The separate experimental helper now performs staged
-conversion; `sh tools/game-assets.sh package-helper NEW_OUTPUT` builds a Release
+conversion; `sh game-assets.sh package-helper NEW_OUTPUT` builds a Release
 developer bundle. See [bundle usage and limitations](HELPER-BUNDLE.md). Production
 engine acceptance remains incomplete.
 
@@ -1322,7 +1322,7 @@ verified; clean-machine deployment, complete source distribution and Linux remai
 open release gates. Review again: 2026-11-14.
 ## Offline source rebuild (2026-11-01)
 
-`sh tools/game-assets.sh package-helper NEW_OUTPUT` now includes all helper native
+`sh game-assets.sh package-helper NEW_OUTPUT` now includes all helper native
 sources/build files, the active patch and self-contained pinned Assimp/ufbx source
 repositories. See [SOURCE-BUILD.md](SOURCE-BUILD.md). Run the bundle's
 `sh rebuild-helper.sh NEW_DIRECTORY` with the normal native build tools; it checks

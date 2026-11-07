@@ -6,8 +6,8 @@ Linux build toolchain; a Windows Rust installation is not a Linux compiler.
 
 ```sh
 cargo build --locked --features game-assets
-sh tools/game-assets.sh prepare-fixtures
-sh tools/game-assets.sh verify-gpu target/new-gpu-check vulkan
+sh game-assets.sh prepare-fixtures
+sh game-assets.sh verify-gpu target/new-gpu-check vulkan
 ```
 
 On Windows, pass `dx12 vulkan` to check both backends. GPU tests require a suitable
@@ -36,8 +36,8 @@ Defaults are `target/game-assets-tools/assimp` and `ufbx`; override with
 revisions and tracked changes before configuring a build.
 
 ```sh
-sh tools/game-assets.sh build-probes Debug base
-sh tools/game-assets.sh build-probes Release v12
+sh game-assets.sh build-probes Debug base
+sh game-assets.sh build-probes Release v12
 ```
 
 This also builds `gcad_fbx_helper`. Use the v12 build with
@@ -83,7 +83,7 @@ Verify the renderer using a clean checkout of the fork at gcad's pinned revision
 git clone --branch gcad-renderer https://github.com/Wixely/egui_bench ../egui_bench
 git -C ../egui_bench checkout 0c33aef02aa91dbb12ba1f556067dc806e225d16
 cargo run --locked --release --features game-assets --example game_asset_renderer_fixture -- target/new-atlas.bin
-EGUI_BENCH_MANIFEST=../egui_bench/Cargo.toml sh tools/game-assets.sh verify-renderer target/new-renderer-tests target/new-atlas.bin vulkan
+EGUI_BENCH_MANIFEST=../egui_bench/Cargo.toml sh game-assets.sh verify-renderer target/new-renderer-tests target/new-atlas.bin vulkan
 ```
 
 Skip cloning if the checkout already exists. The runner checks its revision and
@@ -112,7 +112,7 @@ After preparing the reviewed v12 sources with `build-probes Release v12`, create
 bundle with the same shell entry point:
 
 ```sh
-sh tools/game-assets.sh package-helper target/helper-bundle
+sh game-assets.sh package-helper target/helper-bundle
 (cd target/helper-bundle && sha256sum -c SHA256SUMS)
 ```
 

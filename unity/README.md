@@ -17,7 +17,7 @@ Add `GCAD_CONSUMER_FAILURE=1` on that ring fixture for native cooking-failure
 recovery, source preservation and retry checks; it writes
 `consumer-failure-report.json` and requires its final gate to pass.
 For `plate-consumer-skinned.gasset`, first run
-`sh tools/game-assets-consumer-fixture.sh`, export/package the fixture, and add
+`sh consumer-fixture.sh`, export/package the fixture, and add
 `GCAD_CONSUMER_SKIN=1`. It requires both LOD meshes to follow the shared skeleton;
 render/player modes also check posed images and ten-image editor/player parity.
 
@@ -69,7 +69,7 @@ sampled-pose assertions still target this fixture family, not arbitrary assets.
 
 ```sh
 UNITY=/absolute/path/to/Unity UNITY_VERSION=6000.4.7f1 \
-  sh tools/game-assets-unity/check-import.sh FBX_PACKAGE NEW_PROJECT
+  sh unity/check-import.sh FBX_PACKAGE NEW_PROJECT
 ```
 
 Use an already installed editor. The script creates an isolated project with
@@ -103,7 +103,7 @@ GLB or sidecar in the delivered package. The explicit adapter below consumes it.
 ```sh
 UNITY=/absolute/path/to/Unity UNITY_VERSION=6000.5.4f1 \
   GCAD_MATERIAL_REFERENCE=/absolute/path/to/reference.glb \
-  sh tools/game-assets-unity/check-import.sh FBX_PACKAGE NEW_PROJECT
+  sh unity/check-import.sh FBX_PACKAGE NEW_PROJECT
 ```
 
 `MaterialCheck.cs` reads material expectations directly from the source GLB in
@@ -162,7 +162,7 @@ UNITY=/absolute/path/to/Unity UNITY_VERSION=6000.5.4f1 \
   GCAD_FBX_HELPER=/absolute/path/to/gcad_fbx_helper \
   GCAD_MATERIAL_REFERENCE=/absolute/path/to/reference.glb \
   GCAD_UNITY_ADAPTER_CHECK=1 GCAD_UNITY_ADAPTER_RENDER=1 \
-  sh tools/game-assets-unity/check-import.sh FBX_PACKAGE NEW_PROJECT
+  sh unity/check-import.sh FBX_PACKAGE NEW_PROJECT
 ```
 
 Both tested versions (6000.4.7f1 and 6000.5.4f1) pass source-factor, map connection,
@@ -235,7 +235,7 @@ UNITY=/absolute/path/to/Unity UNITY_VERSION=6000.5.4f1 \
   GCAD_MATERIAL_REFERENCE=/absolute/path/to/reference.glb \
   GCAD_FBX_HELPER=/absolute/path/to/gcad_fbx_helper \
   GCAD_UNITY_ADAPTER_CHECK=1 GCAD_SOURCE_RENDER_CHECK=1 \
-  sh tools/game-assets-unity/check-import.sh FBX_PACKAGE NEW_PROJECT
+  sh unity/check-import.sh FBX_PACKAGE NEW_PROJECT
 ```
 
 `SourceMeshReference.cs` reconstructs the canonical fixture directly from GLB
@@ -444,7 +444,7 @@ UNITY=/absolute/path/to/Unity UNITY_VERSION=6000.5.4f1 \
   GCAD_UNITY_ADAPTER_CHECK=1 GCAD_DEFORMATION_ADAPTER=1 \
   GCAD_SOURCE_RENDER_CHECK=1 GCAD_PLAYER_CHECK=1 GCAD_PLAYER_RENDER=1 \
   GCAD_IMPORT_DIAGNOSTIC=source-tangents-uncompressed \
-  sh tools/game-assets-unity/check-import.sh FBX_PACKAGE NEW_PROJECT
+  sh unity/check-import.sh FBX_PACKAGE NEW_PROJECT
 ```
 
 This selects the rendered test scene instead of the lifecycle-only scene and
@@ -672,7 +672,7 @@ measurement is the next task. Reviewed 2026-11-01; review by 2026-11-14.
 ### Scrolling with imported skeletal animation
 
 `plate-scene-shader.gasset` adds the frozen scrolling template to the refined
-three-material skinned fixture. Run `tools/game-assets.sh prepare-fixtures`
+three-material skinned fixture. Run `game-assets.sh prepare-fixtures`
 first to create its shared face/weight bindings, then export it to GLB and convert
 with `asset-fbx-experimental`. Use the standard source-render command with
 `GCAD_SOURCE_SHADER_CHECK=1`, `GCAD_SOURCE_RENDER_CHECK=1`,
@@ -763,7 +763,7 @@ materials, followed by scene/player checks. Review: 2026-11-14.
 
 `examples/game-assets/plate-scene-refined.gasset` refines the original plate twice
 to 20,416 triangles while keeping its three materials and bend/stretch/travel
-clips. Run `bash tools/game-assets.sh prepare-fixtures` to create its own face
+clips. Run `bash game-assets.sh prepare-fixtures` to create its own face
 selections and weight binding, export it to GLB, and convert that GLB into a new
 empty package directory with the v12 helper. Use the resulting GLB/package with
 the rendered-player recipe above and a fresh Unity project.
