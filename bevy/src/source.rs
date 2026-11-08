@@ -6,9 +6,41 @@ use crate::settings::{Centre, GcadSettings};
 use std::path::Path;
 
 pub const GCAD_VERSION: &str = gcad2glb::VERSION;
+pub use gcad2glb::Sources;
+pub use gcad2glb::cache::{
+    AssetCache, DEFAULT_MAX_AGE, DEFAULT_MAX_BYTES, INDEX, Index, Pruned, file_name, sources_in,
+    write_atomic,
+};
+pub use gcad2glb::sources::include_of;
 
-pub fn key(source: &str, settings: &GcadSettings) -> u64 {
-    gcad2glb::cache_key(source, &options(settings, false))
+pub fn options_of(settings: &GcadSettings) -> gcad2glb::Options {
+    options(settings, false)
+}
+
+pub fn meta(sources: &Sources, asset: &str, settings: &GcadSettings) -> String {
+    gcad2glb::cache::meta(sources, asset, &options(settings, false))
+}
+
+pub fn key(sources: &Sources, settings: &GcadSettings) -> Result<u64, String> {
+    key_with(GCAD_VERSION, sources, settings)
+}
+
+pub fn key_with(version: &str, sources: &Sources, settings: &GcadSettings) -> Result<u64, String> {
+    let centre = [match settings.centre {
+        Centre::No => 0u8,
+        Centre::Yes => 1,
+        Centre::Unrigged => 2,
+    }];
+    let tag = crate::cache::format_tag();
+    let key = sources.key_with(version, &options(settings, false)).map_err(|e| e.to_string())?;
+    Ok(gcad2glb::sources::fold(key, &[&centre, tag.as_bytes()]))
+}
+
+pub fn build_sources(sources: &Sources, file: Option<&Path>, settings: &GcadSettings) -> Result<Built, String> {
+    let assembly = file.is_some_and(|f| f.extension().is_some_and(|e| e.eq_ignore_ascii_case("gasm")));
+    let by_path = cfg!(feature = "brep") && (assembly || sources.has_references());
+    let source = sources.source().map_err(|e| e.to_string())?;
+    build(&source, file.filter(|_| by_path), settings)
 }
 
 pub fn build(source: &str, file: Option<&Path>, settings: &GcadSettings) -> Result<Built, String> {

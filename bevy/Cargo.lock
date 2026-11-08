@@ -3000,7 +3000,7 @@ dependencies = [
 [[package]]
 name = "gcad-brep"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "anyhow",
  "bitcode",
@@ -3025,7 +3025,7 @@ dependencies = [
 [[package]]
 name = "gcad-calc"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "anyhow",
  "serde",
@@ -3035,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "gcad-geom"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "anyhow",
  "epaint_default_fonts",
@@ -3049,7 +3049,7 @@ dependencies = [
 [[package]]
 name = "gcad-host"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "rayon",
  "sha2",
@@ -3062,7 +3062,7 @@ dependencies = [
 [[package]]
 name = "gcad-mesh"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "anyhow",
  "gcad-parse",
@@ -3074,7 +3074,7 @@ dependencies = [
 [[package]]
 name = "gcad-parse"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "anyhow",
 ]
@@ -3082,16 +3082,17 @@ dependencies = [
 [[package]]
 name = "gcad-version"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 
 [[package]]
 name = "gcad2glb"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=75e25dda66abf25347778ccb7c65b155d52d2195#75e25dda66abf25347778ccb7c65b155d52d2195"
+source = "git+https://github.com/v0l/gcad?rev=a4baa61515b7808a421e4c2126dc0de42c954d7d#a4baa61515b7808a421e4c2126dc0de42c954d7d"
 dependencies = [
  "gcad-brep",
  "gcad-mesh",
  "gcad-version",
+ "serde_json",
 ]
 
 [[package]]

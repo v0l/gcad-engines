@@ -284,15 +284,12 @@ fn the_disk_cache_reuses_a_model_built_in_an_earlier_run() {
     let assets = tempdir("cache-assets");
     let cache = tempdir("cache-store");
     std::fs::copy(examples().join("mesh/creature.gcad"), assets.join("creature.gcad")).unwrap();
-    let plugin = GcadPlugin {
-        cache_dir: Some(cache.clone()),
-        asset_root: None,
-    };
+    let plugin = GcadPlugin::with_cache_dir(cache.clone());
     let mut first = app(assets.clone(), plugin.clone());
     let handle = load(&mut first, "creature.gcad", GcadSettings::default());
     let one = spawn(&mut first, &handle);
     assert_eq!(first.world().resource::<GcadStats>().builds(), 1);
-    assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 1);
+    assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 2, "the entry and its sidecar");
     let mut second = app(assets.clone(), plugin.clone());
     let handle = load(&mut second, "creature.gcad", GcadSettings::default());
     let two = spawn(&mut second, &handle);

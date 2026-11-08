@@ -1,116 +1,186 @@
 use crate::built::Built;
+use crate::source::{self, AssetCache, Pruned};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
 
-const FORMAT: u32 = 1;
+pub const FORMAT: u32 = 1;
+pub const EXTENSION: &str = "bin";
+pub const BAKED_DIR: &str = "gcad-baked";
+pub const DEFAULT_MAX_BYTES: u64 = source::DEFAULT_MAX_BYTES;
+pub const DEFAULT_MAX_AGE: Duration = source::DEFAULT_MAX_AGE;
 const KEPT: usize = 16;
 
 type Slot = Arc<OnceLock<Result<Arc<Built>, String>>>;
 
 #[derive(Default)]
 pub struct Cache {
-    dir: Option<PathBuf>,
+    disk: Option<AssetCache>,
     slots: Mutex<Vec<(u64, Slot)>>,
-    builds: std::sync::atomic::AtomicUsize,
+    used: Mutex<HashSet<u64>>,
+    pub(crate) builds: AtomicUsize,
+    pub(crate) hits_baked: AtomicUsize,
+    pub(crate) hits_disk: AtomicUsize,
+    pub(crate) hits_memory: AtomicUsize,
+}
+
+pub fn format_tag() -> String {
+    format!("gcad-bevy-bitcode-{FORMAT}")
+}
+
+pub fn encode(built: &Built) -> Vec<u8> {
+    let mut bytes = FORMAT.to_le_bytes().to_vec();
+    bytes.extend(bitcode::encode(built));
+    bytes
+}
+
+pub fn decode(bytes: &[u8]) -> Option<Built> {
+    let (format, body) = bytes.split_at_checked(4)?;
+    (u32::from_le_bytes(format.try_into().ok()?) == FORMAT)
+        .then(|| bitcode::decode(body).ok())
+        .flatten()
+}
+
+pub fn file_name(key: u64) -> String {
+    source::file_name(key, EXTENSION)
 }
 
 impl Cache {
     pub fn new(dir: Option<PathBuf>) -> Cache {
         Cache {
-            dir,
+            disk: dir.map(|d| AssetCache::with_extension(d, EXTENSION)),
             ..Default::default()
         }
     }
 
     pub fn dir(&self) -> Option<&Path> {
-        self.dir.as_deref()
+        self.disk.as_ref().map(AssetCache::dir)
     }
 
-    pub fn builds(&self) -> usize {
-        self.builds.load(std::sync::atomic::Ordering::Relaxed)
+    pub fn count(counter: &AtomicUsize) -> usize {
+        counter.load(Ordering::Relaxed)
+    }
+
+    pub fn bytes_on_disk(&self) -> u64 {
+        self.disk.as_ref().map_or(0, AssetCache::bytes)
+    }
+
+    pub fn keep(&self, keys: &HashSet<u64>) {
+        self.used.lock().unwrap_or_else(|e| e.into_inner()).extend(keys);
+    }
+
+    pub fn prune(&self, max_bytes: u64, max_age: Duration) -> Pruned {
+        let keep = self.used.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        self.disk
+            .as_ref()
+            .map_or_else(Pruned::default, |d| d.prune(max_bytes, max_age, &keep))
+    }
+
+    fn slot(&self, key: u64) -> Slot {
+        let mut slots = self.slots.lock().unwrap_or_else(|e| e.into_inner());
+        slots.retain(|(_, s)| Arc::strong_count(s) > 1 || s.get().is_some_and(Result::is_ok));
+        match slots.iter().find(|(k, _)| *k == key) {
+            Some((_, s)) => s.clone(),
+            None => {
+                let s = Slot::default();
+                slots.push((key, s.clone()));
+                if slots.len() > KEPT {
+                    slots.remove(0);
+                }
+                s
+            }
+        }
+    }
+
+    pub fn in_memory(&self, key: u64) -> bool {
+        let slots = self.slots.lock().unwrap_or_else(|e| e.into_inner());
+        slots.iter().any(|(k, s)| *k == key && s.get().is_some_and(Result::is_ok))
+    }
+
+    pub fn build_uncached(&self, build: impl FnOnce() -> Result<Built, String>) -> Result<Arc<Built>, String> {
+        let built = build()?;
+        self.builds.fetch_add(1, Ordering::Relaxed);
+        Ok(Arc::new(built))
     }
 
     pub fn get_or_build(
         &self,
         key: u64,
+        baked: Option<Vec<u8>>,
+        meta: String,
         build: impl FnOnce() -> Result<Built, String>,
     ) -> Result<Arc<Built>, String> {
-        let slot = {
-            let mut slots = self.slots.lock().unwrap_or_else(|e| e.into_inner());
-            slots.retain(|(_, s)| Arc::strong_count(s) > 1 || s.get().is_some_and(Result::is_ok));
-            match slots.iter().find(|(k, _)| *k == key) {
-                Some((_, s)) => s.clone(),
-                None => {
-                    let s = Slot::default();
-                    slots.push((key, s.clone()));
-                    if slots.len() > KEPT {
-                        slots.remove(0);
-                    }
-                    s
+        self.used.lock().unwrap_or_else(|e| e.into_inner()).insert(key);
+        let slot = self.slot(key);
+        let mut ran = false;
+        let result = slot
+            .get_or_init(|| {
+                ran = true;
+                if let Some(built) = baked.as_deref().and_then(decode) {
+                    self.hits_baked.fetch_add(1, Ordering::Relaxed);
+                    return Ok(Arc::new(built));
                 }
-            }
-        };
-        slot.get_or_init(|| {
-            if let Some(built) = self.read(key) {
-                return Ok(Arc::new(built));
-            }
-            let built = build()?;
-            self.builds.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            self.write(key, &built);
-            Ok(Arc::new(built))
-        })
-        .clone()
-    }
-
-    fn file(&self, key: u64) -> Option<PathBuf> {
-        Some(self.dir.as_ref()?.join(format!("{key:016x}.bin")))
+                if let Some(built) = self.read(key) {
+                    self.hits_disk.fetch_add(1, Ordering::Relaxed);
+                    return Ok(Arc::new(built));
+                }
+                let built = build()?;
+                self.builds.fetch_add(1, Ordering::Relaxed);
+                self.write(key, &built, &meta);
+                Ok(Arc::new(built))
+            })
+            .clone();
+        if !ran {
+            self.hits_memory.fetch_add(1, Ordering::Relaxed);
+        }
+        result
     }
 
     fn read(&self, key: u64) -> Option<Built> {
-        let bytes = std::fs::read(self.file(key)?).ok()?;
-        let (format, body) = bytes.split_at_checked(4)?;
-        (u32::from_le_bytes(format.try_into().ok()?) == FORMAT)
-            .then(|| bitcode::decode(body).ok())
-            .flatten()
+        let disk = self.disk.as_ref()?;
+        let built = decode(&disk.get(key, |b| b.len() > 4)?);
+        if built.is_none() {
+            disk.remove(key);
+        }
+        built
     }
 
-    fn write(&self, key: u64, built: &Built) {
-        let (Some(dir), Some(file)) = (self.dir.as_ref(), self.file(key)) else {
-            return;
-        };
-        if std::fs::create_dir_all(dir).is_err() {
-            return;
-        }
-        let mut bytes = FORMAT.to_le_bytes().to_vec();
-        bytes.extend(bitcode::encode(built));
-        let partial = file.with_extension(format!("{}.part", std::process::id()));
-        if std::fs::write(&partial, bytes).is_ok() && std::fs::rename(&partial, &file).is_err() {
-            let _ = std::fs::remove_file(partial);
+    fn write(&self, key: u64, built: &Built, meta: &str) {
+        if let Some(disk) = &self.disk {
+            let _ = disk.put(key, &encode(built), meta);
         }
     }
+}
+
+#[cfg(target_os = "android")]
+fn platform_dir() -> Option<PathBuf> {
+    let files = bevy::android::ANDROID_APP.get()?.internal_data_path()?;
+    Some(files.parent().map_or(files.clone(), |app| app.join("cache")))
+}
+
+#[cfg(target_os = "ios")]
+fn platform_dir() -> Option<PathBuf> {
+    Some(PathBuf::from(std::env::var_os("HOME")?).join("Library").join("Caches"))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn platform_dir() -> Option<PathBuf> {
+    None
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+fn platform_dir() -> Option<PathBuf> {
+    std::env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))
+        .or_else(|| std::env::var_os("LOCALAPPDATA").map(PathBuf::from))
 }
 
 pub fn default_dir() -> Option<PathBuf> {
-    if cfg!(any(target_arch = "wasm32", target_os = "android", target_os = "ios")) {
-        return None;
-    }
     if std::env::var_os("GCAD_NO_PART_CACHE").is_some() {
         return None;
     }
-    let base = std::env::var_os("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))
-        .or_else(|| std::env::var_os("LOCALAPPDATA").map(PathBuf::from))?;
-    Some(base.join("gcad").join("bevy"))
-}
-
-pub fn fold(key: u64, parts: &[&[u8]]) -> u64 {
-    let mut hash = key ^ 0xcbf2_9ce4_8422_2325;
-    for part in parts {
-        for b in (part.len() as u64).to_le_bytes().iter().chain(part.iter()) {
-            hash ^= *b as u64;
-            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
-    }
-    hash
+    Some(platform_dir()?.join("gcad").join("bevy"))
 }

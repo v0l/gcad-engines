@@ -1,15 +1,15 @@
 use crate::cache::{self, Cache};
-use crate::settings::{Centre, GcadSettings};
+use crate::settings::GcadSettings;
 use crate::{source, world};
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, AssetPath, LoadContext};
 use bevy::prelude::*;
 use bevy::world_serialization::WorldAsset;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub const EXTENSIONS: &[&str] = &["gcad", "gasm"];
-const REFERENCED: &[&str] = &[".gcad", ".gasm", ".png", ".svg", ".dxf", ".step", ".stp", ".stl", ".ttf"];
 
 #[derive(Debug)]
 pub struct GcadError(pub String);
@@ -26,14 +26,39 @@ impl std::error::Error for GcadError {}
 pub struct GcadLoader {
     pub(crate) cache: Arc<Cache>,
     pub(crate) root: Option<PathBuf>,
+    pub(crate) baked: Option<String>,
+    baked_keys: Arc<Mutex<Option<Arc<HashSet<u64>>>>>,
 }
 
 impl GcadLoader {
     pub fn new(cache_dir: Option<PathBuf>, root: Option<PathBuf>) -> GcadLoader {
+        GcadLoader::with_cache(Arc::new(Cache::new(cache_dir)), root, Some(cache::BAKED_DIR.to_string()))
+    }
+
+    pub(crate) fn with_cache(cache: Arc<Cache>, root: Option<PathBuf>, baked: Option<String>) -> GcadLoader {
         GcadLoader {
-            cache: Arc::new(Cache::new(cache_dir)),
+            cache,
             root,
+            baked,
+            baked_keys: Arc::default(),
         }
+    }
+
+    async fn baked_keys(&self, dir: &str, context: &mut LoadContext<'_>) -> Arc<HashSet<u64>> {
+        if let Some(keys) = self.baked_keys.lock().unwrap_or_else(|e| e.into_inner()).clone() {
+            return keys;
+        }
+        let index = read_bytes(context, &format!("{dir}/{}", source::INDEX)).await;
+        let keys = index
+            .and_then(|b| String::from_utf8(b).ok())
+            .and_then(|t| source::Index::from_json(&t).ok())
+            .filter(|i| i.gcad == source::GCAD_VERSION && i.format == cache::format_tag())
+            .map(|i| i.keys())
+            .unwrap_or_default();
+        let keys = Arc::new(keys);
+        *self.baked_keys.lock().unwrap_or_else(|e| e.into_inner()) = Some(keys.clone());
+        self.cache.keep(&keys);
+        keys
     }
 }
 
@@ -71,38 +96,13 @@ fn expand(
 }
 
 fn include_of(line: &str) -> Option<&str> {
-    let name = line.trim().strip_prefix("include ")?.split_whitespace().next()?;
-    (!name.contains('=')).then_some(name)
+    source::include_of(line)
 }
 
-fn references(source: &str) -> Vec<String> {
-    let mut out: Vec<String> = source
-        .lines()
-        .filter(|line| include_of(line).is_none() && !line.trim_start().starts_with('#'))
-        .flat_map(|line| line.split_whitespace())
-        .map(|token| token.rsplit('=').next().unwrap_or(token).trim_matches(|c| c == '"' || c == ','))
-        .filter(|token| {
-            let lower = token.to_ascii_lowercase();
-            REFERENCED.iter().any(|ext| lower.ends_with(ext)) && !token.starts_with("std:")
-        })
-        .map(str::to_string)
-        .collect();
-    out.sort();
-    out.dedup();
-    out
-}
-
-async fn read_text(context: &mut LoadContext<'_>, path: AssetPath<'static>) -> Result<String, GcadError> {
-    let bytes = context
-        .read_asset_bytes(path.clone())
-        .await
-        .map_err(|e| GcadError(format!("{path}: {e}")))?;
-    String::from_utf8(bytes).map_err(|e| GcadError(format!("{path}: {e}")))
-}
-
-fn sibling(context: &LoadContext<'_>, dir: &Path, name: &str) -> AssetPath<'static> {
+async fn read_bytes(context: &mut LoadContext<'_>, path: &str) -> Option<Vec<u8>> {
     let source = context.path().source().clone_owned();
-    AssetPath::from_path_buf(dir.join(name)).with_source(source).into_owned()
+    let path = AssetPath::from(path.to_string()).with_source(source).into_owned();
+    context.read_asset_bytes(path).await.ok()
 }
 
 impl AssetLoader for GcadLoader {
@@ -123,38 +123,16 @@ impl AssetLoader for GcadLoader {
             .map_err(|e| GcadError(e.to_string()))?;
         let text = String::from_utf8(bytes).map_err(|e| GcadError(e.to_string()))?;
         let asset = context.path().path().to_path_buf();
-        let dir = asset.parent().map(Path::to_path_buf).unwrap_or_default();
-        let mut included: Vec<(PathBuf, String)> = Vec::new();
-        let mut pending: Vec<(PathBuf, String)> = vec![(dir.clone(), text.clone())];
-        while let Some((at, body)) = pending.pop() {
-            for line in body.lines() {
-                if let Some(name) = include_of(line) {
-                    let key = at.join(name);
-                    if included.iter().any(|(k, _)| *k == key) {
-                        continue;
-                    }
-                    if included.len() >= 256 {
-                        return Err(GcadError("more than 256 included files".into()));
-                    }
-                    let inner = read_text(context, sibling(context, &at, name)).await?;
-                    let inner_dir = key.parent().map(Path::to_path_buf).unwrap_or_default();
-                    pending.push((inner_dir, inner.clone()));
-                    included.push((key, inner));
-                }
+        let asset_name = asset.to_string_lossy().replace('\\', "/");
+        let mut sources = source::Sources::new(&asset_name, &text);
+        loop {
+            let wanted = sources.wanted();
+            if wanted.is_empty() {
+                break;
             }
-        }
-        let source = expand(&text, &dir, &mut |at, name| {
-            let key = at.join(name);
-            included
-                .iter()
-                .find(|(k, _)| *k == key)
-                .map(|(_, t)| t.clone())
-                .ok_or_else(|| GcadError(format!("include {} not found", key.display())))
-        }, 0)?;
-        let mut extra = Vec::new();
-        for name in references(&source) {
-            if let Ok(bytes) = context.read_asset_bytes(sibling(context, &dir, &name)).await {
-                extra.push(bytes);
+            for path in wanted {
+                let bytes = read_bytes(context, &path).await;
+                sources.supply(&path, bytes).map_err(|e| GcadError(e.to_string()))?;
             }
         }
         let is_assembly = asset
@@ -163,7 +141,7 @@ impl AssetLoader for GcadLoader {
         let file = self
             .root
             .as_ref()
-            .filter(|_| cfg!(feature = "brep") && (is_assembly || !extra.is_empty()))
+            .filter(|_| cfg!(feature = "brep") && (is_assembly || sources.has_references()))
             .map(|root| root.join(&asset));
         if is_assembly && file.is_none() {
             return Err(GcadError(format!(
@@ -171,26 +149,23 @@ impl AssetLoader for GcadLoader {
                 asset.display()
             )));
         }
-        let centre = [match settings.centre {
-            Centre::No => 0u8,
-            Centre::Yes => 1,
-            Centre::Unrigged => 2,
-        }];
-        let asset_name = asset.to_string_lossy().into_owned();
-        let mut parts: Vec<&[u8]> = vec![&centre, asset_name.as_bytes()];
-        parts.extend(extra.iter().map(Vec::as_slice));
-        let key = cache::fold(source::key(&source, settings), &parts);
+        let key = source::key(&sources, settings).map_err(GcadError)?;
+        let meta = source::meta(&sources, &asset_name, settings);
+        let baked = match (&self.baked, settings.cache && !self.cache.in_memory(key)) {
+            (Some(dir), true) if self.baked_keys(dir, context).await.contains(&key) => {
+                read_bytes(context, &format!("{dir}/{}", cache::file_name(key))).await
+            }
+            _ => None,
+        };
         let build = {
-            let source = source.clone();
             let settings = settings.clone();
             let file = file.clone();
             move || {
                 let started = bevy::platform::time::Instant::now();
-                let built = source::build(&source, file.as_deref(), &settings);
+                let built = source::build_sources(&sources, file.as_deref(), &settings);
                 if let Ok(b) = &built {
                     debug!(
-                        "built gcad model ({} bytes, {} triangles) in {:.0} ms",
-                        source.len(),
+                        "built gcad model ({} triangles) in {:.0} ms",
                         b.triangles(),
                         started.elapsed().as_secs_f64() * 1000.0
                     );
@@ -201,8 +176,8 @@ impl AssetLoader for GcadLoader {
         let cache = self.cache.clone();
         let use_cache = settings.cache;
         let task = move || match use_cache {
-            true => cache.get_or_build(key, build),
-            false => build().map(Arc::new),
+            true => cache.get_or_build(key, baked, meta, build),
+            false => cache.build_uncached(build),
         };
         let built = run_off_thread(task).await.map_err(|e| GcadError(format!("{}: {e}", asset.display())))?;
         Ok(world::into_world(&built, settings, context))
