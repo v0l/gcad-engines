@@ -1305,7 +1305,7 @@ dependencies = [
  "approx 0.5.1",
  "bevy_reflect",
  "derive_more",
- "glam 0.33.12",
+ "glam",
  "libm",
  "rand",
  "serde",
@@ -1334,7 +1334,7 @@ dependencies = [
  "bytemuck",
  "derive_more",
  "encase",
- "glam 0.33.12",
+ "glam",
  "half",
  "hexasphere",
  "serde",
@@ -1491,7 +1491,7 @@ dependencies = [
  "downcast-rs 2.0.2",
  "erased-serde",
  "foldhash 0.2.0",
- "glam 0.33.12",
+ "glam",
  "indexmap",
  "inventory",
  "petgraph",
@@ -1556,7 +1556,7 @@ dependencies = [
  "derive_more",
  "downcast-rs 2.0.2",
  "encase",
- "glam 0.33.12",
+ "glam",
  "image",
  "indexmap",
  "itertools 0.14.0",
@@ -2038,7 +2038,7 @@ dependencies = [
  "arrayvec",
  "bitcode_derive",
  "bytemuck",
- "glam 0.34.2",
+ "glam",
  "serde",
 ]
 
@@ -3000,7 +3000,7 @@ dependencies = [
 [[package]]
 name = "gcad-brep"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "anyhow",
  "bitcode",
@@ -3025,7 +3025,7 @@ dependencies = [
 [[package]]
 name = "gcad-calc"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "anyhow",
  "serde",
@@ -3035,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "gcad-geom"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "anyhow",
  "epaint_default_fonts",
@@ -3049,7 +3049,7 @@ dependencies = [
 [[package]]
 name = "gcad-host"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "rayon",
  "sha2",
@@ -3062,7 +3062,7 @@ dependencies = [
 [[package]]
 name = "gcad-mesh"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "anyhow",
  "gcad-parse",
@@ -3074,7 +3074,7 @@ dependencies = [
 [[package]]
 name = "gcad-parse"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "anyhow",
 ]
@@ -3082,12 +3082,12 @@ dependencies = [
 [[package]]
 name = "gcad-version"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 
 [[package]]
 name = "gcad2glb"
 version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=5a5fde3abba0c6199e1214f287b9671504aceac4#5a5fde3abba0c6199e1214f287b9671504aceac4"
+source = "git+https://github.com/v0l/gcad?rev=434c02e72c9d4cbcb5331479733bf7a2f7611f82#434c02e72c9d4cbcb5331479733bf7a2f7611f82"
 dependencies = [
  "gcad-brep",
  "gcad-mesh",
@@ -3201,12 +3201,6 @@ dependencies = [
  "rand",
  "serde_core",
 ]
-
-[[package]]
-name = "glam"
-version = "0.34.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54af5066834d6c2d404eb26ea036a15b15d9ff80db510b9a73ff95ab07f30831"
 
 [[package]]
 name = "glob"
@@ -3393,7 +3387,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "163385eff5a0cf606ebe2c10b3a44ab02f4306e83fbd068a64f5e1d72a3049ac"
 dependencies = [
  "constgebra",
- "glam 0.33.12",
+ "glam",
  "tinyvec",
 ]
 
