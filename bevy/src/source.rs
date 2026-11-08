@@ -1,5 +1,5 @@
 use crate::built::{
-    Built, BuiltBody, BuiltClip, BuiltJoint, BuiltLod, BuiltPart, BuiltRotations, BuiltTarget,
+    Built, BuiltBody, BuiltClip, BuiltJoint, BuiltLod, BuiltNormalMap, BuiltPart, BuiltRotations, BuiltTarget,
     BuiltTranslations, BuiltWeights,
 };
 use crate::settings::{Centre, GcadSettings};
@@ -95,6 +95,48 @@ fn parts_of(b: &gcad2glb::Body) -> Vec<BuiltPart> {
 }
 
 fn body_of(b: &gcad2glb::Body) -> BuiltBody {
+    let body = plain_body_of(b);
+    match b.normal_map() {
+        Some(map) => split_by_uvs(body, map),
+        None => body,
+    }
+}
+
+fn split_by_uvs(mut body: BuiltBody, map: gcad2glb::NormalMap) -> BuiltBody {
+    let pick = |v: &[[f32; 3]]| -> Vec<[f32; 3]> { map.source.iter().map(|i| v[*i as usize]).collect() };
+    if !body.colours.is_empty() {
+        body.colours = pick(&body.colours);
+    }
+    if !body.joints.is_empty() {
+        body.joint_indices = map.source.iter().map(|i| body.joint_indices[*i as usize]).collect();
+        body.joint_weights = map.source.iter().map(|i| body.joint_weights[*i as usize]).collect();
+    }
+    for target in &mut body.targets {
+        target.deltas = pick(&target.deltas);
+    }
+    body.positions = map.positions;
+    body.normals = map.normals;
+    body.indices = map.indices;
+    body.parts = map
+        .parts
+        .iter()
+        .map(|p| BuiltPart {
+            name: p.name.clone(),
+            colour: p.colour,
+            gloss: p.gloss,
+            first_index: p.first_index as u32,
+            index_count: p.index_count as u32,
+        })
+        .collect();
+    body.normal_map = Some(BuiltNormalMap {
+        png: map.png,
+        uvs: map.uvs,
+        tangents: map.tangents,
+    });
+    body
+}
+
+fn plain_body_of(b: &gcad2glb::Body) -> BuiltBody {
     BuiltBody {
         name: b.name.clone(),
         positions: b.positions.clone(),
@@ -124,6 +166,7 @@ fn body_of(b: &gcad2glb::Body) -> BuiltBody {
             .collect(),
         target_weights: b.target_weights.clone(),
         lods: Vec::new(),
+        normal_map: None,
     }
 }
 

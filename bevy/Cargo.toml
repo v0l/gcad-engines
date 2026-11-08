@@ -25,6 +25,8 @@ bevy = { version = "0.20", default-features = false, features = [
   "bevy_asset",
   "bevy_log",
   "bevy_pbr",
+  "bevy_image",
+  "png",
   "bevy_animation",
   "bevy_world_serialization",
   "bevy_curve",

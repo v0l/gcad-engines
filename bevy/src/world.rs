@@ -1,4 +1,4 @@
-use crate::built::{Built, BuiltBody, BuiltClip, BuiltPart};
+use crate::built::{Built, BuiltBody, BuiltClip, BuiltNormalMap, BuiltPart};
 use crate::settings::GcadSettings;
 use bevy::animation::animation_curves::WeightsCurve;
 use bevy::animation::gltf_curves::WideLinearKeyframeCurve;
@@ -8,6 +8,7 @@ use bevy::camera::visibility::{NoFrustumCulling, VisibilityRange};
 use bevy::curve::{ConstantCurve, Interval, UnevenSampleAutoCurve};
 use bevy::mesh::morph::{MeshMorphWeights, MorphAttributes, MorphWeights};
 use bevy::mesh::skinning::{SkinnedMesh, SkinnedMeshInverseBindposes};
+use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::mesh::{Indices, PrimitiveTopology, VertexAttributeValues};
 use bevy::prelude::*;
 use bevy::world_serialization::WorldAsset;
@@ -43,6 +44,12 @@ pub fn mesh_of(body: &BuiltBody, part: &BuiltPart) -> Mesh {
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, pick(&body.positions));
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, pick(&body.normals));
+    if let Some(map) = &body.normal_map {
+        let uvs: Vec<[f32; 2]> = used.iter().map(|i| map.uvs[*i as usize]).collect();
+        let tangents: Vec<[f32; 4]> = used.iter().map(|i| map.tangents[*i as usize]).collect();
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_TANGENT, tangents);
+    }
     if !body.colours.is_empty() {
         let colours: Vec<[f32; 4]> = used
             .iter()
@@ -75,6 +82,18 @@ pub fn mesh_of(body: &BuiltBody, part: &BuiltPart) -> Mesh {
         body.indices[range].iter().map(|i| remap[*i as usize]).collect(),
     ));
     mesh
+}
+
+pub fn normal_image(map: &BuiltNormalMap) -> Option<Image> {
+    Image::from_buffer(
+        &map.png,
+        ImageType::Extension("png"),
+        CompressedImageFormats::NONE,
+        false,
+        ImageSampler::Default,
+        RenderAssetUsages::default(),
+    )
+    .ok()
 }
 
 pub fn material_of(body: &BuiltBody, part: &BuiltPart) -> StandardMaterial {
@@ -237,6 +256,11 @@ pub fn into_world(built: &Built, settings: &GcadSettings, load_context: &mut Loa
         let levels: Vec<BuiltBody> = std::iter::once(body.clone())
             .chain(body.lods.iter().map(|l| l.body(body)))
             .collect();
+        let normal_texture = body
+            .normal_map
+            .as_ref()
+            .and_then(normal_image)
+            .map(|image| load_context.add_labeled_asset(format!("{}/Normal", body.name), image));
         for (level, lod) in levels.iter().enumerate() {
             let holder = match (&morph_name, level) {
                 (Some(name), 0) => {
@@ -263,7 +287,11 @@ pub fn into_world(built: &Built, settings: &GcadSettings, load_context: &mut Loa
                 };
                 let mesh = load_context.add_labeled_asset(format!("{label}/Mesh"), mesh_of(lod, part));
                 first_mesh.get_or_insert_with(|| mesh.clone());
-                let material = load_context.add_labeled_asset(format!("{label}/Material"), material_of(lod, part));
+                let mut material = material_of(lod, part);
+                if level == 0 {
+                    material.normal_map_texture = normal_texture.clone();
+                }
+                let material = load_context.add_labeled_asset(format!("{label}/Material"), material);
                 let mut e = world.spawn((
                     Mesh3d(mesh),
                     MeshMaterial3d(material),

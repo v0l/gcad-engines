@@ -22,6 +22,14 @@ pub struct BuiltBody {
     pub targets: Vec<BuiltTarget>,
     pub target_weights: Vec<f32>,
     pub lods: Vec<BuiltLod>,
+    pub normal_map: Option<BuiltNormalMap>,
+}
+
+#[derive(Clone, Debug, Default, Encode, Decode, PartialEq)]
+pub struct BuiltNormalMap {
+    pub png: Vec<u8>,
+    pub uvs: Vec<[f32; 2]>,
+    pub tangents: Vec<[f32; 4]>,
 }
 
 #[derive(Clone, Debug, Default, Encode, Decode, PartialEq)]

@@ -30,6 +30,7 @@ fn app(assets: PathBuf, plugin: GcadPlugin) -> App {
         WorldSerializationPlugin,
     ))
     .init_asset::<StandardMaterial>()
+    .init_asset::<Image>()
     .add_plugins(plugin);
     app
 }
@@ -355,6 +356,7 @@ fn editing_an_included_file_reloads_the_model() {
         WorldSerializationPlugin,
     ))
     .init_asset::<StandardMaterial>()
+    .init_asset::<Image>()
     .add_plugins(GcadPlugin::without_disk_cache());
     let handle = load(&mut app, "model.gcad", GcadSettings::default());
     let before = spawn(&mut app, &handle).model.bounds_max.y;
@@ -371,4 +373,30 @@ fn editing_an_included_file_reloads_the_model() {
         assert!(started.elapsed().as_secs() < 30, "no reload: {before} -> {now}");
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
+}
+
+#[test]
+fn baked_normals_become_a_normal_map_with_uvs_and_tangents() {
+    let dir = tempdir("bake");
+    std::fs::write(
+        dir.join("ball.gcad"),
+        "ball: blob 0,0,0 r=10\nremesh 0.5\nfinish decimate=1500\nbake normals size=256\n",
+    )
+    .unwrap();
+    let mut app = app(dir, GcadPlugin::without_disk_cache());
+    let handle = load(&mut app, "ball.gcad", GcadSettings::default());
+    spawn(&mut app, &handle);
+    let materials = app.world().resource::<Assets<StandardMaterial>>();
+    let textured: Vec<_> = materials.iter().filter(|(_, m)| m.normal_map_texture.is_some()).collect();
+    assert_eq!(textured.len(), 1);
+    let image = textured[0].1.normal_map_texture.clone().unwrap();
+    let images = app.world().resource::<Assets<Image>>();
+    let size = images.get(&image).expect("normal image loaded").size();
+    assert_eq!((size.x, size.y), (256, 256));
+    let path = image.path().expect("labelled asset").to_string();
+    assert!(path.ends_with("#main/Normal"), "{path}");
+    let meshes = app.world().resource::<Assets<Mesh>>();
+    assert!(meshes
+        .iter()
+        .any(|(_, m)| m.attribute(Mesh::ATTRIBUTE_TANGENT).is_some() && m.attribute(Mesh::ATTRIBUTE_UV_0).is_some()));
 }

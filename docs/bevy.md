@@ -136,7 +136,6 @@ one file.
   to GLB with `gcad export` and load it with `bevy_gltf`.
 - `.gasm` and kernel solids that read other files (`part`, stamps) need `brep` and assets on disk
   (desktop): gcad-brep reads those files itself, not through Bevy's asset reader.
-- Baked normal maps (`bake normals`) are not applied yet; the base mesh loads without them.
 - `.gsim` files are refused.
 
 ## Tests
