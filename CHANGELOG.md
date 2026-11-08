@@ -1,0 +1,19 @@
+# Changelog
+
+## Unreleased
+
+- Pin gcad 75e25dd (was the pre-split cc734a0). Scripts moved to `scripts/` and read gcad from
+  `GCAD_REPO`; `fetch-gcad.sh`, `doctor.sh`, `check.sh`, `bump-gcad.sh`, `sync-cargo-pins.sh`.
+- `gcad-bevy`: Bevy 0.20 asset loader for `.gcad` and `.gasm` on gcad's `gcad2glb` library, with
+  `GcadPlugin`, settings for fit, detail, LODs and overrides, a memory and disk build cache, hot
+  reload, the `hero` and `props` examples, headless tests, wasm32 and Android builds.
+- Godot: `addons/gcad` import plugin for `.gcad`/`.gasm`, a portable headless Godot for checks,
+  and the GLB import check now runs (Godot 4.7.2).
+- Unity: runtime scripts, editor adapters and shaders are a package, `io.v0l.gcad`, with asmdefs
+  and an importer (menu, settings, optional auto-adapt).
+- FBX helper: builds and passes on Linux. Fixed a crash on every conversion: the helper compiled
+  rapidjson without Assimp's `RAPIDJSON_NOMEMBERITERATORCLASS`, so the two disagreed on
+  `FindMember`. `native-tests/` runs the process tests with `cargo test`.
+- CI: script lint, gcad build at the pin, fixtures, Godot, FBX helper, Bevy (with wasm32 and
+  Android), renderer patch reproduction, Windows helpers; weekly against gcad master.
+- `docs/status.md` records what ran where.
