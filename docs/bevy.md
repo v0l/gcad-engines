@@ -11,13 +11,13 @@ kids-free-games `crates/app/src/gcad.rs`.
 gcad-bevy = { git = "https://github.com/v0l/gcad-engines", rev = "<rev>" }
 ```
 
-The repo is private, so cargo needs git credentials for it (`CARGO_NET_GIT_FETCH_WITH_CLI=true`
-with a working `git clone`).
+The repo is public, so cargo fetches it with no credentials.
 
 Features:
 
 | feature | what it adds |
 |---|---|
+| `multi_threaded` (default) | Bevy's multi-threaded task pools. Leave it off (`default-features = false`) when the game runs Bevy single-threaded: models then build on the main thread's local executor |
 | (none) | mesh files: blockout, sculpt, rigs, skins, clips, correctives, LODs; flat solids (`rect`, `extrude`, ...) through gcad-mesh. Builds for wasm32 and Android |
 | `brep` | files with kernel solids (`hole`, `fillet`, `plane plate.end`, ...) and `.gasm` assemblies. Pulls in monstertruck: copy the `[patch.crates-io]` table from `bevy/Cargo.toml` into the game's root `Cargo.toml` |
 | `parallel` | rayon inside gcad-mesh |

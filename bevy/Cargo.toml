@@ -10,7 +10,8 @@ publish = false
 [workspace]
 
 [features]
-default = []
+default = ["multi_threaded"]
+multi_threaded = ["bevy/multi_threaded"]
 brep = ["gcad2glb/brep"]
 parallel = ["gcad2glb/parallel"]
 hot-reload = ["bevy/file_watcher"]
@@ -33,9 +34,6 @@ bevy = { version = "0.20", default-features = false, features = [
   "morph",
   "morph_animation",
 ] }
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-bevy = { version = "0.20", default-features = false, features = ["multi_threaded"] }
 
 [dev-dependencies]
 bevy = { version = "0.20", default-features = false, features = ["debug"] }

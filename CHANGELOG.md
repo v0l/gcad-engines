@@ -7,6 +7,8 @@
 - `gcad-bevy`: Bevy 0.20 asset loader for `.gcad` and `.gasm` on gcad's `gcad2glb` library, with
   `GcadPlugin`, settings for fit, detail, LODs and overrides, a memory and disk build cache, hot
   reload, the `hero` and `props` examples, headless tests, wasm32 and Android builds.
+- `gcad-bevy`: Bevy's `multi_threaded` is a default feature instead of always on, so a game
+  that runs Bevy single-threaded (kids-free-games) keeps its task pools as they are.
 - Godot: `addons/gcad` import plugin for `.gcad`/`.gasm`, a portable headless Godot for checks,
   and the GLB import check now runs (Godot 4.7.2).
 - Unity: runtime scripts, editor adapters and shaders are a package, `io.v0l.gcad`, with asmdefs
