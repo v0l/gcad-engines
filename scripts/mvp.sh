@@ -1,7 +1,7 @@
 #!/bin/sh
 # Open a .gasset in the gcad game-asset viewer, with the FBX helper built here when there is one.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 if [ "$#" -ne 1 ]; then
     printf '%s\n' 'Usage: sh scripts/mvp.sh ASSET.gasset' >&2
     exit 1

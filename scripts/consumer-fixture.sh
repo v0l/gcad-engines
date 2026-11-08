@@ -1,7 +1,7 @@
 #!/bin/sh
 # Prepare both bindings of the skinned consumer fixture without requiring either to exist already.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 find_gcad
 cd "$GCAD_REPO"

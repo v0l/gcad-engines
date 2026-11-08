@@ -2,7 +2,7 @@
 # Headless check of the Godot addon: builds scenes through addons/gcad/gcad.gd, then runs the
 # editor's own import (--headless --import) on .gcad files so the EditorImportPlugin is exercised.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 godot=${GODOT:-$(sh "$root/godot/fetch-godot.sh")}
 tool=${GCAD2GLB:-}

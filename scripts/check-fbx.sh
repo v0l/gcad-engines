@@ -2,7 +2,7 @@
 # Build the FBX helper, run its CMake tests, convert the reference fixtures and run the Rust
 # process tests in native-tests/ against it. Needs cmake, a C++17 compiler, git and cargo.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 find_gcad
 tools="$root/target/game-assets-tools"

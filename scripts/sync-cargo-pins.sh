@@ -1,7 +1,7 @@
 #!/bin/sh
 # Point every Cargo manifest here at GCAD_REV and copy gcad's [patch.crates-io] table under it.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 rev=$gcad_rev
 [ "$(git -C "$GCAD_REPO" rev-parse HEAD)" = "$rev" ] || { echo "$GCAD_REPO is not at GCAD_REV $rev" >&2; exit 1; }

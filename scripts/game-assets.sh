@@ -1,7 +1,7 @@
 #!/bin/sh
 # Development entry points for the optional game-asset pipeline.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
 assimp_rev=a4643cbd30d3088bbff312d3cc2652f514fb97c0
 ufbx_rev=5955c5c0b042ac2dc6f32955ab206aaec0620cfc
@@ -37,7 +37,7 @@ check_hash() {
 new_output() {
     [ ! -e "$1" ] || fail "Preserving existing output: $1"
     mkdir -p "$1"
-    output=$(CDPATH= cd -- "$1" && pwd)
+    output=$(CDPATH='' cd -- "$1" && pwd)
 }
 backend_ok() { case "$1" in dx12|vulkan) ;; *) fail "Unsupported test backend: $1";; esac; }
 command=${1:---help}
@@ -161,14 +161,14 @@ verify-gpu|verify-renderer)
     if [ "$command" = verify-renderer ]; then
         [ -n "${EGUI_BENCH_MANIFEST:-}" ] || fail 'Set EGUI_BENCH_MANIFEST to the fork checkout Cargo.toml'
         [ -f "$EGUI_BENCH_MANIFEST" ] || fail 'Renderer manifest does not exist'
-        renderer_dir=$(CDPATH= cd -- "$(dirname -- "$EGUI_BENCH_MANIFEST")" && pwd)
+        renderer_dir=$(CDPATH='' cd -- "$(dirname -- "$EGUI_BENCH_MANIFEST")" && pwd)
         renderer_manifest="$renderer_dir/Cargo.toml"
         renderer_rev=$(sed -n 's/^egui_bench = { git = .*rev = "\([a-f0-9]*\)".*/\1/p' "$GCAD_REPO/Cargo.toml")
         [ -n "$renderer_rev" ] || fail "Missing renderer revision in $GCAD_REPO/Cargo.toml"
         check_pin "$renderer_dir" "$renderer_rev"
         [ "$#" -ge 1 ] || fail 'An atlas fixture is required'
         [ -f "$1" ] || fail 'Atlas fixture does not exist'
-        GCAD_ATLAS_FIXTURE=$(CDPATH= cd -- "$(dirname -- "$1")" && pwd)/$(basename -- "$1")
+        GCAD_ATLAS_FIXTURE=$(CDPATH='' cd -- "$(dirname -- "$1")" && pwd)/$(basename -- "$1")
         if command -v cygpath >/dev/null 2>&1; then GCAD_ATLAS_FIXTURE=$(cygpath -w "$GCAD_ATLAS_FIXTURE"); fi
         export GCAD_ATLAS_FIXTURE
         shift

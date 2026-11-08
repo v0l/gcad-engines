@@ -2,11 +2,11 @@
 # Offline rebuild using only the sources distributed in this helper bundle.
 set -eu
 [ "$#" -eq 1 ] || { echo 'Usage: CMAKE=... sh rebuild-helper.sh NEW_DIRECTORY' >&2; exit 1; }
-bundle=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+bundle=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 [ ! -e "$1" ] || { echo 'Preserving existing rebuild directory' >&2; exit 1; }
 (cd "$bundle" && sha256sum --strict -c SHA256SUMS)
 mkdir -p "$1"
-work=$(CDPATH= cd -- "$1" && pwd)
+work=$(CDPATH='' cd -- "$1" && pwd)
 for dependency in assimp ufbx; do
     git clone --no-hardlinks "$bundle/source/$dependency.git" "$work/$dependency"
 done

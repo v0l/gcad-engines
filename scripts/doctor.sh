@@ -2,7 +2,7 @@
 # Report which integrations can run on this machine. Exits non-zero only when a part named
 # on the command line is missing: sh scripts/doctor.sh gcad godot fbx
 set -u
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 want=" $* "
 missing=0
 report() {

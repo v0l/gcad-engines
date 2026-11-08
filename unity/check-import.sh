@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reference fixture consumer test; no packages, plugins or engine installs.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 [ "$#" -eq 2 ] || { echo 'Usage: UNITY=... UNITY_VERSION=... sh check-import.sh FBX_PACKAGE NEW_PROJECT' >&2; exit 1; }
 : "${UNITY:?Select an installed Unity executable}"
 : "${UNITY_VERSION:?Specify its exact editor version}"
@@ -92,11 +92,11 @@ if [ -n "${GCAD_MATERIAL_REFERENCE:-}" ] && { [ -n "${GCAD_POSE_REFERENCE:-}" ] 
     echo 'Run material settings separately from pose/render checks' >&2
     exit 1
 fi
-package=$(CDPATH= cd -- "$1" && pwd)
+package=$(CDPATH='' cd -- "$1" && pwd)
 [ ! -e "$2" ] || { echo 'Preserving existing project' >&2; exit 1; }
 [ -f "$package/model.fbx" ]
 mkdir -p "$2/Assets/Editor" "$2/Assets/Fixture" "$2/Packages" "$2/ProjectSettings"
-project=$(CDPATH= cd -- "$2" && pwd)
+project=$(CDPATH='' cd -- "$2" && pwd)
 if [ -n "${GCAD_LOD_COST_BASELINE:-}" ]; then
     : "${GCAD_FBX_HELPER:?Select the reviewed helper for LOD cost measurement}"
     mkdir -p "$project/Assets/Baseline"
@@ -178,7 +178,7 @@ fi
 if [ "${GCAD_ROOT_MOTION_CHECK:-0}" = 1 ]; then
     test -f "$package/gcad-root-motion.json"
     method=GcadRootMotionCheck.Run
-    report=root-motion-report.json
+    report="root-motion-report.json"
 fi
 if [ "${GCAD_CONSUMER_CHECK:-0}" = 1 ]; then
     test -f "$package/gcad-consumer-profile.json"

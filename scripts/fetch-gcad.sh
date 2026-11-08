@@ -1,7 +1,7 @@
 #!/bin/sh
 # Check out gcad at GCAD_REV into target/gcad and, with --build, build it with game assets.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 rev=$(cat "$root/GCAD_REV")
 url=${GCAD_URL:-https://github.com/v0l/gcad}
 dest=${GCAD_REPO:-"$root/target/gcad"}

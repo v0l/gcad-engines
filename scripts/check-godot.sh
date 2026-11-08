@@ -2,7 +2,7 @@
 # Export reference fixtures with gcad and run the headless Godot import check on each, plus a
 # truncated GLB that must be refused. Uses GODOT, or a portable copy from godot/fetch-godot.sh.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 find_gcad
 godot=${GODOT:-$(sh "$root/godot/fetch-godot.sh")}

@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck shell=sh disable=SC2034,SC2154
 # Shared paths for the scripts in this repo. Source it after setting `root`.
 gcad_rev=$(cat "$root/GCAD_REV")
 if [ -z "${GCAD_REPO:-}" ]; then
@@ -9,7 +10,7 @@ if [ -z "${GCAD_REPO:-}" ]; then
     fi
 fi
 [ -d "$GCAD_REPO/examples" ] || { echo "No gcad checkout at $GCAD_REPO: set GCAD_REPO or run sh scripts/fetch-gcad.sh" >&2; exit 1; }
-GCAD_REPO=$(CDPATH= cd -- "$GCAD_REPO" && pwd)
+GCAD_REPO=$(CDPATH='' cd -- "$GCAD_REPO" && pwd)
 export GCAD_REPO
 fixtures="$GCAD_REPO/examples/game-assets"
 find_gcad() {

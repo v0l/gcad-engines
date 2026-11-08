@@ -1,7 +1,7 @@
 #!/bin/sh
 # Download a portable Linux Godot into target/godot. Installs nothing system-wide.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 version=${GODOT_RELEASE:-4.7.2-stable}
 case "$(uname -m)" in
 x86_64) arch=linux.x86_64 ;;

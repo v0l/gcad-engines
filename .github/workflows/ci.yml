@@ -1,0 +1,156 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      gcad_rev:
+        description: "gcad revision to test instead of GCAD_REV (master for the latest)"
+        required: false
+
+env:
+  CARGO_TERM_COLOR: always
+  GCAD_REPO: ${{ github.workspace }}/target/gcad
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - run: for s in scripts/*.sh godot/*.sh unity/*.sh fbx-helper/*.sh; do sh -n "$s"; done
+      - run: shellcheck -S warning scripts/*.sh godot/*.sh unity/*.sh fbx-helper/*.sh
+
+  gcad:
+    runs-on: ubuntu-latest
+    outputs:
+      rev: ${{ steps.rev.outputs.rev }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: rev
+        run: |
+          rev="${{ github.event.inputs.gcad_rev }}"
+          if [ "${{ github.event_name }}" = schedule ] || [ "$rev" = master ]; then
+            rev=$(git ls-remote https://github.com/v0l/gcad refs/heads/master | cut -f1)
+          fi
+          [ -n "$rev" ] || rev=$(cat GCAD_REV)
+          echo "$rev" > GCAD_REV
+          echo "rev=$rev" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: target/gcad -> target
+      - run: sudo apt-get update && sudo apt-get install -y libwayland-dev libxkbcommon-dev libudev-dev libasound2-dev
+      - run: sh scripts/fetch-gcad.sh --build
+      - run: cd target/gcad && cargo build --release -p gcad2glb
+      - run: tar -C target/gcad/target/release -cf gcad-bin.tar gcad gcad2glb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gcad-bin
+          path: gcad-bin.tar
+
+  fixtures:
+    needs: gcad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ needs.gcad.outputs.rev }}" > GCAD_REV && sh scripts/fetch-gcad.sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcad-bin
+      - run: mkdir -p bin && tar -C bin -xf gcad-bin.tar
+      - run: GCAD=$PWD/bin/gcad sh scripts/check.sh
+        env:
+          SKIP: syntax godot fbx bevy
+
+  godot:
+    needs: gcad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ needs.gcad.outputs.rev }}" > GCAD_REV && sh scripts/fetch-gcad.sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcad-bin
+      - run: mkdir -p bin && tar -C bin -xf gcad-bin.tar
+      - run: GCAD=$PWD/bin/gcad sh scripts/check-godot.sh
+      - run: GCAD=$PWD/bin/gcad GCAD2GLB=$PWD/bin/gcad2glb sh godot/check-addon.sh
+
+  fbx:
+    needs: gcad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ needs.gcad.outputs.rev }}" > GCAD_REV && sh scripts/fetch-gcad.sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: gcad-bin
+      - run: mkdir -p bin && tar -C bin -xf gcad-bin.tar
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native-tests -> target
+      - run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libwayland-dev libxkbcommon-dev libudev-dev
+      - run: sh scripts/sync-cargo-pins.sh && cp target/gcad/Cargo.lock native-tests/Cargo.lock
+      - run: GCAD=$PWD/bin/gcad sh scripts/check-fbx.sh
+
+  renderer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          curl -fsSL -o egui_bench-0.9.2.crate https://static.crates.io/crates/egui_bench/egui_bench-0.9.2.crate
+          sh scripts/game-assets.sh reproduce-renderer egui_bench-0.9.2.crate target/renderer-repro
+    # verify-renderer needs a Vulkan GPU; GitHub's runners have none. Run it on a GPU machine:
+    # EGUI_BENCH_MANIFEST=... sh scripts/game-assets.sh verify-renderer OUT atlas.bin vulkan
+
+  bevy:
+    needs: gcad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "${{ needs.gcad.outputs.rev }}" > GCAD_REV && sh scripts/fetch-gcad.sh && sh scripts/sync-cargo-pins.sh
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown, aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bevy -> target
+      - run: sudo apt-get update && sudo apt-get install -y libwayland-dev libxkbcommon-dev libudev-dev libasound2-dev
+      - run: cd bevy && cargo test --release
+      - run: cd bevy && cargo test --release --features brep
+      - run: cd bevy && cargo test --release --features hot-reload
+      - run: cd bevy && cargo check --release --lib --target wasm32-unknown-unknown
+      - run: cargo install cargo-ndk --locked
+      - run: cd bevy && cargo ndk -t arm64-v8a check --release --lib --features bevy/android-game-activity
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+
+  windows:
+    needs: gcad
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem windows/*.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) { $errors; exit 1 }
+            "parsed $($f.Name)"
+          }
+      - shell: bash
+        run: echo "${{ needs.gcad.outputs.rev }}" > GCAD_REV && sh scripts/fetch-gcad.sh
+      - uses: dtolnay/rust-toolchain@stable
+      - shell: pwsh
+        run: |
+          $env:GCAD_REPO = "$PWD\target\gcad"
+          .\windows\build-tests.ps1
+          if (-not (Test-Path "$env:GCAD_REPO\target\debug\tests\lib.exe")) { throw "no lib.exe" }
+
+  # Unity: no editor on GitHub's runners and a licence is needed. Run unity/check-import.sh on a
+  # machine with Unity 6000.4/6000.5 (see docs/status.md).
