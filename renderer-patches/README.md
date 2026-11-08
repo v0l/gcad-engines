@@ -1,9 +1,9 @@
 # Adopted game-asset renderer
 
-Use `sh game-assets.sh verify-gpu NEW_OUTPUT dx12 vulkan` for active gcad
+Use `sh scripts/game-assets.sh verify-gpu NEW_OUTPUT dx12 vulkan` for active gcad
 checks. `reproduce-renderer` checks and reapplies the pinned crate patches;
 `verify-renderer` runs tests in the fork selected by `EGUI_BENCH_MANIFEST`. See
-[development commands](../game-assets.md) for complete commands and prerequisites.
+[development commands](../docs/game-assets.md) for complete commands and prerequisites.
 
 On 2026-11-02 the renderer changes moved to the
 [Wixely fork](https://github.com/Wixely/egui_bench/tree/gcad-renderer), based on

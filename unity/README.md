@@ -17,7 +17,7 @@ Add `GCAD_CONSUMER_FAILURE=1` on that ring fixture for native cooking-failure
 recovery, source preservation and retry checks; it writes
 `consumer-failure-report.json` and requires its final gate to pass.
 For `plate-consumer-skinned.gasset`, first run
-`sh consumer-fixture.sh`, export/package the fixture, and add
+`sh scripts/consumer-fixture.sh`, export/package the fixture, and add
 `GCAD_CONSUMER_SKIN=1`. It requires both LOD meshes to follow the shared skeleton;
 render/player modes also check posed images and ten-image editor/player parity.
 
@@ -763,7 +763,7 @@ materials, followed by scene/player checks. Review: 2026-11-14.
 
 `examples/game-assets/plate-scene-refined.gasset` refines the original plate twice
 to 20,416 triangles while keeping its three materials and bend/stretch/travel
-clips. Run `bash game-assets.sh prepare-fixtures` to create its own face
+clips. Run `bash scripts/game-assets.sh prepare-fixtures` to create its own face
 selections and weight binding, export it to GLB, and convert that GLB into a new
 empty package directory with the v12 helper. Use the resulting GLB/package with
 the rendered-player recipe above and a fresh Unity project.

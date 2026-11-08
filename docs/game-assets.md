@@ -6,8 +6,8 @@ Linux build toolchain; a Windows Rust installation is not a Linux compiler.
 
 ```sh
 cargo build --locked --features game-assets
-sh game-assets.sh prepare-fixtures
-sh game-assets.sh verify-gpu target/new-gpu-check vulkan
+sh scripts/game-assets.sh prepare-fixtures
+sh scripts/game-assets.sh verify-gpu target/new-gpu-check vulkan
 ```
 
 On Windows, pass `dx12 vulkan` to check both backends. GPU tests require a suitable
@@ -15,7 +15,7 @@ adapter and fail rather than skip an unavailable requested backend. Output
 directories must be new; failures retain stdout/stderr logs. Existing weights and
 face selections are preserved. Set `GCAD=/path/to/gcad` to select an executable.
 
-`sh tools/game-assets-lod-fixture.sh NEW_DIRECTORY` reproduces the refined skinned
+`sh $GCAD_REPO/tools/game-assets-lod-fixture.sh NEW_DIRECTORY` reproduces the refined skinned
 LOD experiment after `prepare-fixtures`. It retains the original GLB, writes the
 derived GLB and captures its JSON report with explicit fixture error limits.
 The accepted fixture recipe uses a 1 mm endpoint-correspondence allowance while
@@ -36,8 +36,8 @@ Defaults are `target/game-assets-tools/assimp` and `ufbx`; override with
 revisions and tracked changes before configuring a build.
 
 ```sh
-sh game-assets.sh build-probes Debug base
-sh game-assets.sh build-probes Release v12
+sh scripts/game-assets.sh build-probes Debug base
+sh scripts/game-assets.sh build-probes Release v12
 ```
 
 This also builds `gcad_fbx_helper`. Use the v12 build with
@@ -83,7 +83,7 @@ Verify the renderer using a clean checkout of the fork at gcad's pinned revision
 git clone --branch gcad-renderer https://github.com/Wixely/egui_bench ../egui_bench
 git -C ../egui_bench checkout 0c33aef02aa91dbb12ba1f556067dc806e225d16
 cargo run --locked --release --features game-assets --example game_asset_renderer_fixture -- target/new-atlas.bin
-EGUI_BENCH_MANIFEST=../egui_bench/Cargo.toml sh game-assets.sh verify-renderer target/new-renderer-tests target/new-atlas.bin vulkan
+EGUI_BENCH_MANIFEST=../egui_bench/Cargo.toml sh scripts/game-assets.sh verify-renderer target/new-renderer-tests target/new-atlas.bin vulkan
 ```
 
 Skip cloning if the checkout already exists. The runner checks its revision and
@@ -112,7 +112,7 @@ After preparing the reviewed v12 sources with `build-probes Release v12`, create
 bundle with the same shell entry point:
 
 ```sh
-sh game-assets.sh package-helper target/helper-bundle
+sh scripts/game-assets.sh package-helper target/helper-bundle
 (cd target/helper-bundle && sha256sum -c SHA256SUMS)
 ```
 

@@ -1,19 +1,24 @@
 #!/bin/sh
 # Development entry points for the optional game-asset pipeline.
 set -eu
-root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
+assimp_rev=a4643cbd30d3088bbff312d3cc2652f514fb97c0
+ufbx_rev=5955c5c0b042ac2dc6f32955ab206aaec0620cfc
 fail() { printf '%s\n' "$*" >&2; exit 1; }
 usage() {
     cat <<'EOF'
-Usage: sh game-assets.sh COMMAND [ARGS]
+Usage: sh scripts/game-assets.sh COMMAND [ARGS]
   prepare-fixtures                         Preserve/create bindings, check fixtures
+  fetch-sources                            Clone the pinned Assimp and ufbx sources
   build-probes [Debug|Release] [base|v10|v11|v12] Build native import/FBX probes
   package-helper NEW_OUTPUT                Build experimental Release helper bundle
   verify-gpu NEW_OUTPUT [dx12|vulkan ...]    Run active asset GPU regression tests
   verify-renderer NEW_OUTPUT ATLAS [BACKEND ...]  Test EGUI_BENCH_MANIFEST checkout
   reproduce-renderer ARCHIVE NEW_OUTPUT    Apply pinned patches to the crate
 
+Fixtures are read from the gcad checkout in GCAD_REPO (default ../gcad, then
+target/gcad from scripts/fetch-gcad.sh) and bindings are written to its target/.
 Use GCAD to select a built gcad executable, CMAKE to select CMake, and
 ASSIMP_SOURCE/UFBX_SOURCE to select existing pinned dependency checkouts.
 GPU backends default to dx12 and vulkan; select vulkan for Linux.
@@ -41,9 +46,9 @@ case "$command" in
 --help|-h) usage ;;
 prepare-fixtures)
     [ "$#" -eq 0 ] || fail 'prepare-fixtures takes no arguments; use GCAD for the executable'
-    gcad=${GCAD:?set GCAD to a gcad built with --features game-assets}
-    [ -f "$gcad" ] || gcad="$gcad.exe"
-    [ -f "$gcad" ] || fail 'Build gcad with --features game-assets, or set GCAD'
+    . "$root/scripts/env.sh"
+    find_gcad
+    cd "$GCAD_REPO"
     mkdir -p target
     while IFS='|' read -r selection filename; do
         [ -e "target/$filename" ] && continue
@@ -79,8 +84,22 @@ plate-twist-chain|plate|game-asset-plate-twist-chain.weights.json|bone0,bone1,bo
 plate-twist-sliced|plate|game-asset-plate-twist-sliced.weights.json|bone0,bone1,bone2,bone3,bone4|--chain|y,-15,-7.5,0,7.5,15
 plate-twist-sliced-fine|plate|game-asset-plate-twist-sliced-fine.weights.json|bone0,bone1,bone2,bone3,bone4|--chain|y,-15,-7.5,0,7.5,15
 EOF
-    GCAD="$gcad" sh consumer-fixture.sh
+    GCAD="$gcad" sh "$root/scripts/consumer-fixture.sh"
     for fixture in examples/game-assets/*.gasset; do "$gcad" check "$fixture"; done
+    ;;
+fetch-sources)
+    [ "$#" -eq 0 ] || fail 'fetch-sources takes no arguments'
+    tools="$root/target/game-assets-tools"
+    mkdir -p "$tools"
+    while read -r name url rev; do
+        [ -d "$tools/$name/.git" ] || git clone --quiet "$url" "$tools/$name"
+        git -C "$tools/$name" -c advice.detachedHead=false checkout --quiet "$rev"
+        check_pin "$tools/$name" "$rev"
+        printf '%s %s\n' "$name" "$rev"
+    done <<EOF
+assimp https://github.com/assimp/assimp $assimp_rev
+ufbx https://github.com/ufbx/ufbx $ufbx_rev
+EOF
     ;;
 build-probes)
     [ "$#" -le 2 ] || fail 'build-probes takes configuration and writer variant'
@@ -88,8 +107,8 @@ build-probes)
     case "$configuration" in Debug|Release) ;; *) fail 'Use Debug or Release';; esac
     assimp=${ASSIMP_SOURCE:-"$root/target/game-assets-tools/assimp"}
     ufbx=${UFBX_SOURCE:-"$root/target/game-assets-tools/ufbx"}
-    check_pin "$assimp" a4643cbd30d3088bbff312d3cc2652f514fb97c0
-    check_pin "$ufbx" 5955c5c0b042ac2dc6f32955ab206aaec0620cfc
+    check_pin "$assimp" "$assimp_rev"
+    check_pin "$ufbx" "$ufbx_rev"
     case "$variant" in
     base) build="$root/target/game-assets-tools/build" ;;
     v10|v11|v12)
@@ -112,8 +131,10 @@ build-probes)
         ;;
     *) fail 'Use base, v10, v11 or v12';;
     esac
-    "${CMAKE:-cmake}" -S fbx-helper -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" "-DCMAKE_BUILD_TYPE=$configuration"
-    "${CMAKE:-cmake}" --build "$build" --config "$configuration" --parallel 8
+    "${CMAKE:-cmake}" -S fbx-helper -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" "-DCMAKE_BUILD_TYPE=$configuration" \
+        "-DGCAD_HELPER_PROTOCOL_TESTS=${GCAD_HELPER_PROTOCOL_TESTS:-OFF}" "-DGCAD_FIXTURES=${GCAD_FIXTURES:-}"
+    "${CMAKE:-cmake}" --build "$build" --config "$configuration" --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-6}"
+    printf 'Built probes: %s\n' "$build"
     ;;
 package-helper)
     [ "$#" -eq 1 ] || fail 'package-helper requires a new output directory'
@@ -123,11 +144,11 @@ package-helper)
     [ "$(git -C "$assimp" rev-parse HEAD)" = a4643cbd30d3088bbff312d3cc2652f514fb97c0 ] || fail 'Prepare reviewed v12 sources with build-probes first'
     actual=$(git -C "$assimp" diff --no-ext-diff --binary --full-index HEAD -- | sha256sum)
     [ "${actual%% *}" = 783bf12bee4103422f8e8d2f74b2f17ae4dd93109b25266cd67baa9838340bf9 ] || fail 'Unreviewed Assimp patch'
-    check_pin "$ufbx" 5955c5c0b042ac2dc6f32955ab206aaec0620cfc
+    check_pin "$ufbx" "$ufbx_rev"
     build="$root/target/game-assets-tools/helper-package-build"
     "${CMAKE:-cmake}" -S fbx-helper -B "$build" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DUSE_STATIC_CRT=ON
-    "${CMAKE:-cmake}" --build "$build" --config Release --target gcad_fbx_helper --parallel 8
+    "${CMAKE:-cmake}" --build "$build" --config Release --target gcad_fbx_helper --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-6}"
     helper="$build/Release/gcad_fbx_helper.exe"
     [ -f "$helper" ] || helper="$build/gcad_fbx_helper"
     "${CMAKE:-cmake}" "-DHELPER=$helper" "-DOUTPUT=$1" "-DASSIMP_SOURCE=$assimp" "-DUFBX_SOURCE=$ufbx" \
@@ -136,13 +157,14 @@ package-helper)
 verify-gpu|verify-renderer)
     [ "$#" -ge 1 ] || fail 'A new output directory is required'
     destination=$1; shift
+    . "$root/scripts/env.sh"
     if [ "$command" = verify-renderer ]; then
         [ -n "${EGUI_BENCH_MANIFEST:-}" ] || fail 'Set EGUI_BENCH_MANIFEST to the fork checkout Cargo.toml'
         [ -f "$EGUI_BENCH_MANIFEST" ] || fail 'Renderer manifest does not exist'
         renderer_dir=$(CDPATH= cd -- "$(dirname -- "$EGUI_BENCH_MANIFEST")" && pwd)
         renderer_manifest="$renderer_dir/Cargo.toml"
-        renderer_rev=$(sed -n 's/^egui_bench = { git = .*rev = "\([a-f0-9]*\)".*/\1/p' Cargo.toml)
-        [ -n "$renderer_rev" ] || fail 'Missing renderer revision in Cargo.toml'
+        renderer_rev=$(sed -n 's/^egui_bench = { git = .*rev = "\([a-f0-9]*\)".*/\1/p' "$GCAD_REPO/Cargo.toml")
+        [ -n "$renderer_rev" ] || fail "Missing renderer revision in $GCAD_REPO/Cargo.toml"
         check_pin "$renderer_dir" "$renderer_rev"
         [ "$#" -ge 1 ] || fail 'An atlas fixture is required'
         [ -f "$1" ] || fail 'Atlas fixture does not exist'
@@ -157,7 +179,7 @@ verify-gpu|verify-renderer)
     for backend do
         export GCAD_RENDER_BACKEND=$backend
         if [ "$command" = verify-gpu ]; then
-            cargo test --locked --release --features game-assets,gpu-tests --lib asset:: -- --nocapture --test-threads=1 >"$output/$backend.stdout" 2>"$output/$backend.stderr"
+            (cd "$GCAD_REPO" && cargo test --locked --release -p gcad-view --features game-assets,gpu-tests --lib asset:: -- --nocapture --test-threads=1) >"$output/$backend.stdout" 2>"$output/$backend.stderr"
             grep -qi "Verified requested backend: $backend" "$output/$backend.stdout"
             grep -Eq 'test result: ok\. [1-9][0-9]* passed; 0 failed; 0 ignored;' "$output/$backend.stdout"
             grep -q 'Textured animation: 87040 pixels' "$output/$backend.stdout"
