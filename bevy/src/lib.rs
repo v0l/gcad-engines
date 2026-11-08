@@ -42,9 +42,14 @@ impl GcadAssets for AssetServer {
     }
 
     fn load_gcad_clip(&self, path: &str, clip: &str, settings: GcadSettings) -> Handle<AnimationClip> {
+        let label = format!("{path}#Animation/{clip}");
+        let _scene = self.load_gcad(path.to_string(), settings.clone());
+        if let Some(loaded) = self.get_handle::<AnimationClip>(&label) {
+            return loaded;
+        }
         self.load_builder()
             .with_settings(move |s: &mut GcadSettings| *s = settings.clone())
-            .load(format!("{path}#Animation/{clip}"))
+            .load(label)
     }
 }
 

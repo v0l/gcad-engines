@@ -9,6 +9,9 @@
   reload, the `hero` and `props` examples, headless tests, wasm32 and Android builds.
 - `gcad-bevy`: Bevy's `multi_threaded` is a default feature instead of always on, so a game
   that runs Bevy single-threaded (kids-free-games) keeps its task pools as they are.
+- `gcad-bevy`: `load_gcad_clip` loads the scene with the clip's settings first and reuses the
+  clip handle once it exists, so a single-threaded app no longer replaces the fitted scene with
+  an unfitted one.
 - Godot: `addons/gcad` import plugin for `.gcad`/`.gasm`, a portable headless Godot for checks,
   and the GLB import check now runs (Godot 4.7.2).
 - Unity: runtime scripts, editor adapters and shaders are a package, `io.v0l.gcad`, with asmdefs

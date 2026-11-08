@@ -161,6 +161,27 @@ fn a_clip_loaded_with_the_same_settings_keeps_the_fit() {
 }
 
 #[test]
+fn every_clip_and_the_scene_keep_the_fit_in_any_order() {
+    let mut app = app(examples(), GcadPlugin::without_disk_cache());
+    let settings = GcadSettings::fit_height(1.0);
+    let server = app.world().resource::<AssetServer>().clone();
+    let clips: Vec<Handle<AnimationClip>> = ["idle", "walk"]
+        .iter()
+        .map(|c| server.load_gcad_clip("mesh/rigged_creature.gcad", c, settings.clone()))
+        .collect();
+    let handle = load(&mut app, "mesh/rigged_creature.gcad", settings.clone());
+    let late = server.load_gcad_clip("mesh/rigged_creature.gcad", "walk", settings);
+    for _ in 0..8 {
+        app.update();
+    }
+    let s = spawn(&mut app, &handle);
+    let height = (s.model.bounds_max.y - s.model.bounds_min.y) * s.root_scale;
+    assert!((height - 1.0).abs() < 1e-4, "fitted height {height}");
+    let loaded = app.world().resource::<Assets<AnimationClip>>();
+    assert!(clips.iter().chain([&late]).all(|c| loaded.contains(c)));
+}
+
+#[test]
 fn corrective_shapes_become_morph_targets_with_a_weight_curve() {
     let mut app = app(examples(), GcadPlugin::without_disk_cache());
     let handle = load(&mut app, "mesh/skin_arm_corrective.gcad", GcadSettings::default());
