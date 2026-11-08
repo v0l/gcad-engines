@@ -181,6 +181,22 @@ fn corrective_shapes_become_morph_targets_with_a_weight_curve() {
 }
 
 #[test]
+fn kids_free_games_hero_loads_when_present() {
+    let Some(models) = std::env::var_os("KIDS_GAMES_MODELS").map(PathBuf::from) else {
+        return;
+    };
+    let mut app = app(models, GcadPlugin::without_disk_cache());
+    let handle = load(&mut app, "hero.gcad", GcadSettings::fit_height(1.0));
+    let s = spawn(&mut app, &handle);
+    assert_eq!(s.model.clips, ["fail", "happy", "idle", "jump", "run", "slide"]);
+    assert_eq!(s.joints, 15, "{s:?}");
+    let height = (s.model.bounds_max.y - s.model.bounds_min.y) * s.root_scale;
+    assert!((height - 1.0).abs() < 1e-4, "fitted height {height}");
+    let tree = load(&mut app, "prop_tree.gcad", GcadSettings::fit_height(1.0));
+    assert!(spawn(&mut app, &tree).meshes >= 1);
+}
+
+#[test]
 fn every_mesh_example_loads() {
     let dir = examples();
     let mut app = app(dir.clone(), GcadPlugin::without_disk_cache());
