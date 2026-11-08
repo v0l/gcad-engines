@@ -127,8 +127,6 @@ jobs:
       - run: cd bevy && cargo check --release --lib --target wasm32-unknown-unknown
       - run: cargo install cargo-ndk --locked
       - run: cd bevy && cargo ndk -t arm64-v8a check --release --lib --features bevy/android-game-activity
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
 
   windows:
     needs: gcad
