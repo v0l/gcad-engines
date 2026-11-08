@@ -1,0 +1,38 @@
+[package]
+name = "gcad-native-tests"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+description = "Tests that drive the native FBX helper through gcad's game-asset process boundary"
+
+[workspace]
+
+[dependencies]
+gcad = { git = "https://github.com/v0l/gcad", rev = "888da75938244e8c24551a16731f3993fdb8a2ee", default-features = false, features = ["game-assets"] }
+
+[dev-dependencies]
+serde_json = "1"
+sha2 = "0.10"
+
+[features]
+default = ["game-assets"]
+game-assets = []
+
+# Copied from gcad's Cargo.toml at GCAD_REV by scripts/bump-gcad.sh.
+[patch.crates-io]
+egui_bench = { git = "https://github.com/v0l/egui_bench", rev = "e37138d6c698c1fd6de2284acf23f669b27ab0a9" }
+monstertruck = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-core = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-traits = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-derive = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-geometry = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-topology = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-mesh = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-meshing = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-modeling = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-solid = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-fillet = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-healing = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-assembly = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-io = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }

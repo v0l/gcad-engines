@@ -6,7 +6,7 @@ fn consumer_profile_transport_and_invalid_role_publication_are_atomic() {
     use std::{path::PathBuf,sync::atomic::AtomicBool,time::Duration};
     use sha2::{Digest,Sha256};
     let helper=PathBuf::from(std::env::var_os("GCAD_FBX_HELPER").expect("helper"));
-    let asset=gcad::asset::author::load(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/game-assets/plate-consumer-profile.gasset"),&[]).unwrap();
+    let asset=gcad::asset::author::load(&gcad_native_tests::fixtures().join("plate-consumer-profile.gasset"),&[]).unwrap();
     let glb=asset.encode_glb().unwrap();
     let destination=std::env::temp_dir().join(format!("gcad-consumer-package-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
     let stage=gcad::asset::fbx_package::PackageStage::new(&destination).unwrap();
@@ -31,7 +31,7 @@ fn consumer_profile_transport_and_invalid_role_publication_are_atomic() {
 fn fractional_root_motion_rejects_stale_timeline_before_publication() {
     use std::{path::PathBuf, sync::atomic::AtomicBool, time::Duration};
     let helper=PathBuf::from(std::env::var_os("GCAD_FBX_HELPER").expect("helper"));
-    let fixture=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/game-assets/plate-root-motion-fractional.gasset");
+    let fixture=gcad_native_tests::fixtures().join("plate-root-motion-fractional.gasset");
     let asset=gcad::asset::author::load(&fixture,&[]).unwrap();
     let destination=std::env::temp_dir().join(format!("gcad-fractional-motion-{}-{}",std::process::id(),std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
     let stage=gcad::asset::fbx_package::PackageStage::new(&destination).unwrap();
@@ -62,7 +62,7 @@ fn root_motion_receipts_preserve_both_schemas_and_reject_invalid_metadata_atomic
     use std::{path::PathBuf, sync::atomic::AtomicBool, time::Duration};
     use sha2::{Digest, Sha256};
     let helper = PathBuf::from(std::env::var_os("GCAD_FBX_HELPER").expect("helper"));
-    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/game-assets/plate-root-motion.gasset");
+    let fixture = gcad_native_tests::fixtures().join("plate-root-motion.gasset");
     let asset = gcad::asset::author::load(&fixture, &[]).unwrap();
     let destination = std::env::temp_dir().join(format!("gcad-motion-package-{}-{}", std::process::id(),
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
@@ -99,7 +99,7 @@ fn root_motion_receipts_preserve_both_schemas_and_reject_invalid_metadata_atomic
         assert_eq!(std::fs::read(output.join("model.fbx")).unwrap(), model);
     }
     // Allowing untextured materials must not permit textures without provenance.
-    let textured = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/game-assets/plate-single-root.gasset");
+    let textured = gcad_native_tests::fixtures().join("plate-single-root.gasset");
     let mut bytes = gcad::asset::author::load(&textured, &[]).unwrap().encode_glb().unwrap();
     let key = b"gcad_texture_source_inputs";
     let at = bytes.windows(key.len()).position(|part| part == key).unwrap();
@@ -155,7 +155,7 @@ fn shader_receipt_is_published_atomically_and_bound_to_fbx() {
     let destination=std::env::temp_dir().join(format!("gcad-shader-package-{}-{}",std::process::id(),
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
     let workspace=gcad::asset::fbx_package::PackageStage::new(&destination).unwrap();
-    let path=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/game-assets/plate-shader-frozen.gasset");
+    let path=gcad_native_tests::fixtures().join("plate-shader-frozen.gasset");
     let asset=gcad::asset::author::load(&path,&[]).unwrap();let mut glb=asset.encode_glb().unwrap();
     let input=workspace.path().join("source.glb");std::fs::write(&input,&glb).unwrap();
     let output=workspace.path().join("package");let cancelled=AtomicBool::new(false);
