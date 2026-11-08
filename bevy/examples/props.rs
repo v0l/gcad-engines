@@ -18,8 +18,14 @@ fn main() {
         }))
         .add_plugins(GcadPlugin::default())
         .add_systems(Startup, setup)
-        .add_systems(Update, spin)
+        .add_systems(Update, (spin, report))
         .run();
+}
+
+fn report(models: Query<(&GcadModel, &GlobalTransform), Added<GlobalTransform>>) {
+    for (model, at) in &models {
+        info!("loaded {} triangles, bounds {:?}..{:?}, placed {:?}", model.triangles, model.bounds_min, model.bounds_max, at.compute_transform());
+    }
 }
 
 fn assets_dir() -> String {
@@ -32,16 +38,17 @@ struct Spin;
 fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     for (k, path) in PROPS.iter().enumerate() {
         let settings = GcadSettings {
+            scale: Some(0.02),
             centre: Centre::Yes,
-            ..GcadSettings::fit_height(0.8)
+            ..default()
         };
         let prop = assets.load_gcad(*path, settings);
-        let x = (k as f32 - (PROPS.len() as f32 - 1.0) / 2.0) * 1.1;
+        let x = (k as f32 - (PROPS.len() as f32 - 1.0) / 2.0) * 1.5;
         commands.spawn((WorldAssetRoot(prop), Transform::from_xyz(x, 0.0, 0.0), Spin));
     }
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 1.6, 4.5).looking_at(Vec3::new(0.0, 0.4, 0.0), Vec3::Y),
+        Transform::from_xyz(0.0, 2.6, 6.0).looking_at(Vec3::new(0.0, 0.2, 0.0), Vec3::Y),
     ));
     commands.spawn((
         DirectionalLight {

@@ -147,6 +147,19 @@ fn rigged_creature_loads_skin_joints_and_clips() {
 }
 
 #[test]
+fn a_clip_loaded_with_the_same_settings_keeps_the_fit() {
+    let mut app = app(examples(), GcadPlugin::without_disk_cache());
+    let settings = GcadSettings::fit_height(1.0);
+    let server = app.world().resource::<AssetServer>().clone();
+    let clip = server.load_gcad_clip("mesh/rigged_creature.gcad", "walk", settings.clone());
+    let handle = load(&mut app, "mesh/rigged_creature.gcad", settings);
+    let s = spawn(&mut app, &handle);
+    let height = (s.model.bounds_max.y - s.model.bounds_min.y) * s.root_scale;
+    assert!((height - 1.0).abs() < 1e-4, "fitted height {height}");
+    assert!(app.world().resource::<Assets<AnimationClip>>().contains(&clip));
+}
+
+#[test]
 fn corrective_shapes_become_morph_targets_with_a_weight_curve() {
     let mut app = app(examples(), GcadPlugin::without_disk_cache());
     let handle = load(&mut app, "mesh/skin_arm_corrective.gcad", GcadSettings::default());

@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy::world_serialization::WorldAssetRoot;
 use gcad_bevy::prelude::*;
 
+const HERO: &str = "mesh/rigged_creature.gcad";
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(AssetPlugin {
@@ -11,7 +13,7 @@ fn main() {
         }))
         .add_plugins(GcadPlugin::default())
         .add_systems(Startup, setup)
-        .add_systems(Update, play_walk)
+        .add_systems(Update, (play_walk, report))
         .run();
 }
 
@@ -22,18 +24,16 @@ fn assets_dir() -> String {
 #[derive(Resource)]
 struct Walk(Handle<AnimationGraph>, AnimationNodeIndex);
 
-fn setup(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut graphs: ResMut<Assets<AnimationGraph>>,
-) {
-    let creature = assets.load_gcad("mesh/rigged_creature.gcad", GcadSettings::fit_height(1.0));
-    let (graph, nodes) = AnimationGraph::from_clip(assets.load("mesh/rigged_creature.gcad#Animation/walk"));
-    commands.insert_resource(Walk(graphs.add(graph), nodes));
+fn setup(mut commands: Commands, assets: Res<AssetServer>, mut graphs: ResMut<Assets<AnimationGraph>>) {
+    let settings = GcadSettings::fit_height(1.0);
+    let creature = assets.load_gcad(HERO, settings.clone());
+    let walk = assets.load_gcad_clip(HERO, "walk", settings);
+    let (graph, node) = AnimationGraph::from_clip(walk);
+    commands.insert_resource(Walk(graphs.add(graph), node));
     commands.spawn(WorldAssetRoot(creature));
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(1.6, 1.1, 2.2).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
+        Transform::from_xyz(1.6, 1.0, 2.0).looking_at(Vec3::new(0.0, 0.4, 0.0), Vec3::Y),
     ));
     commands.spawn((
         DirectionalLight {
@@ -52,5 +52,16 @@ fn play_walk(
     for (entity, mut player) in &mut players {
         player.play(walk.1).repeat();
         commands.entity(entity).insert(AnimationGraphHandle(walk.0.clone()));
+    }
+}
+
+fn report(models: Query<(&GcadModel, &GlobalTransform), Added<GlobalTransform>>) {
+    for (model, at) in &models {
+        info!(
+            "loaded {} triangles, clips {:?}, height {:.3}",
+            model.triangles,
+            model.clips,
+            (model.bounds_max.y - model.bounds_min.y) * at.compute_transform().scale.y
+        );
     }
 }

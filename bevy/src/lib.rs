@@ -26,6 +26,8 @@ pub trait GcadAssets {
         path: impl Into<bevy::asset::AssetPath<'a>>,
         settings: GcadSettings,
     ) -> Handle<bevy::world_serialization::WorldAsset>;
+
+    fn load_gcad_clip(&self, path: &str, clip: &str, settings: GcadSettings) -> Handle<AnimationClip>;
 }
 
 impl GcadAssets for AssetServer {
@@ -37,6 +39,12 @@ impl GcadAssets for AssetServer {
         self.load_builder()
             .with_settings(move |s: &mut GcadSettings| *s = settings.clone())
             .load(path)
+    }
+
+    fn load_gcad_clip(&self, path: &str, clip: &str, settings: GcadSettings) -> Handle<AnimationClip> {
+        self.load_builder()
+            .with_settings(move |s: &mut GcadSettings| *s = settings.clone())
+            .load(format!("{path}#Animation/{clip}"))
     }
 }
 
@@ -85,16 +93,21 @@ impl GcadPlugin {
     }
 }
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+fn disk_root(app: &App) -> Option<PathBuf> {
+    let plugins = app.get_added_plugins::<AssetPlugin>();
+    let file_path = plugins.first().map_or("assets", |p| p.file_path.as_str());
+    Some(bevy::asset::io::file::FileAssetReader::get_base_path().join(file_path))
+}
+
+#[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+fn disk_root(_app: &App) -> Option<PathBuf> {
+    None
+}
+
 impl Plugin for GcadPlugin {
     fn build(&self, app: &mut App) {
-        let root = self.asset_root.clone().or_else(|| {
-            if cfg!(any(target_arch = "wasm32", target_os = "android", target_os = "ios")) {
-                return None;
-            }
-            let plugins = app.get_added_plugins::<AssetPlugin>();
-            let file_path = plugins.first().map_or("assets", |p| p.file_path.as_str());
-            Some(bevy::asset::io::file::FileAssetReader::get_base_path().join(file_path))
-        });
+        let root = self.asset_root.clone().or_else(|| disk_root(app));
         let loader = GcadLoader::new(self.cache_dir.clone(), root);
         app.insert_resource(GcadStats(loader.cache.clone()));
         app.register_type::<GcadModel>()
