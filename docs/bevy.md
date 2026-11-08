@@ -111,16 +111,74 @@ centred.
 
 ## Includes, caching and threads
 
-`include file.gcad` lines are read through Bevy's asset reader, so they work from an Android APK
-and over HTTP on the web, and they are loader dependencies, so hot reload follows them.
+`include file.gcad` lines, and the files a model names (`part x.gcad`, stamps, fonts), are read
+through Bevy's asset reader, so they work from an Android APK and over HTTP on the web, and they
+are loader dependencies, so hot reload follows them.
 
-Each model is built once per process and kept in memory (the last 16), keyed on gcad's
-`cache_key` (gcad version, text with includes expanded, settings) plus the asset path and the
-bytes of any file the text names (`part x.gcad`, stamps). With a cache directory (the default on
-desktop: `$XDG_CACHE_HOME/gcad/bevy`, `GcadPlugin::without_disk_cache()` turns it off; never on
-wasm, Android or iOS) the built model is stored as bitcode and reused on the next run.
-`GcadStats::builds()` counts real builds. Builds run on Bevy's `AsyncComputeTaskPool`, off the
-main thread.
+The cache key is gcad's `Sources::key` (gcad version, text with includes expanded, every option,
+the path and bytes of each file the text names; [caching.md](caching.md)) folded with the
+`centre` setting and the bitcode format tag. A model is looked up in three places, and only
+built when all three miss:
+
+1. memory: the last 16 models built this run.
+2. the shipped bake: `<assets>/gcad-baked/<key>.bin`, read through the asset reader (APK, HTTP,
+   app bundle). `index.json` is read once per run; a key that is not in it is not fetched, and an
+   index from another gcad version or format is ignored.
+3. the disk cache: `<cache dir>/<key>.bin` with a `<key>.json` sidecar.
+
+The disk cache is on by default on desktop (`$XDG_CACHE_HOME/gcad/bevy`, `~/.cache`,
+`%LOCALAPPDATA%`), Android (`<app data>/cache/gcad/bevy`, from `ANDROID_APP`) and iOS
+(`$HOME/Library/Caches/gcad/bevy` in the sandbox). Web has none: the shipped bake covers it, and
+IndexedDB or Cache Storage would save only the 1-3 ms each `.bin` takes over HTTP.
+`GcadPlugin::without_disk_cache()` or `GCAD_NO_PART_CACHE` turns it off,
+`GcadPlugin::with_cache_dir(dir)` moves it, `baked_dir: None` skips the bake.
+
+A bad file (wrong format tag, truncated, not bitcode) is a miss; on disk it is deleted and
+rebuilt. Writes go to a temp file and are renamed, so two processes writing one key leave one
+whole file. A read touches the file's mtime. On start, with a disk cache, a task on the
+`IoTaskPool` removes entries untouched for `max_cache_age` (30 days) and the oldest beyond
+`max_cache_bytes` (64 MB), never one used this run or named in the shipped index.
+
+`GcadStats` counts `builds()`, `hits_baked()`, `hits_disk()`, `hits_memory()` and reports
+`bytes_on_disk()`. Builds run on Bevy's `AsyncComputeTaskPool`, off the main thread.
+
+### Bake at build time
+
+```sh
+cargo run --release --bin gcad-bevy-bake -- --height 1 --centre unrigged assets   # writes assets/gcad-baked/
+cargo run --release --bin gcad-bevy-bake -- --check --height 1 --centre unrigged assets
+```
+
+`gcad_bevy::bake::bake(assets, settings_for)` and `bake::check` do the same from a build script
+or test, with a settings function per asset path (`None` skips a file). Give it the same function
+the game loads with, or the keys miss. `--check` exits 1 when a model has no entry, a stale one,
+or a file that does not decode, so CI can refuse a release with unbaked models. Files only
+reached through `include` are not baked on their own. A bake reuses entries that are already
+there and deletes the ones no source names any more.
+
+kids-free-games (`settings(scale)`, 14 models from 140549 B of text, measured with
+`KIDS_GAMES_ASSETS=... cargo test --release --features parallel --test cache every_model -- --nocapture`):
+
+| model | bitcode B | gzip -9 B | build ms | from bake ms |
+|---|---|---|---|---|
+| hero | 520099 | 250218 | 529 | 6 |
+| prop_tree | 72400 | 43418 | 100 | 5 |
+| 12 other props | 742417 | 93397 | 4-6 each | 3-5 each |
+| all 14 | 1334916 | 387033 | | |
+
+The bake takes 0.6 s on desktop, and 0 s when nothing changed. Starts of kids-free-games, time
+until every model is ready (release builds, `ModelsPlugin`):
+
+| | no bake, empty cache | no bake, warm disk cache | shipped bake, first start |
+|---|---|---|---|
+| Desktop, private headless sway | 672-730 ms, 14 builds | 103-113 ms | 108-112 ms, 0 builds |
+| Android emulator `kidsgames-test` x86_64 | 1337 ms, 14 builds | 558-675 ms | 496-798 ms, 0 builds |
+| iOS simulator, iPad Pro 11-inch (M4) | 942 ms, 14 builds | 110-112 ms | 106-115 ms, 0 builds |
+| Web, headless Chrome | 2765-3044 ms, 14 builds | (no disk cache) | 2081-2677 ms, 0 builds |
+
+With the bake the first start after an install builds nothing on every platform. On the
+emulator and the web what is left is the rest of the app start: on the web the models wait for
+the 13 MB of sound files that load before them.
 
 ## One file talks to gcad
 
@@ -153,3 +211,14 @@ cargo ndk -t arm64-v8a check --release --lib --features bevy/android-game-activi
 `examples/mesh/*.gcad` from gcad, checking mesh, triangle, joint and clip counts against the
 library, the fitted height, the morph weight curve, LOD ranges, nested includes, error lines,
 the disk cache across two apps, and with `brep` a solid part and `assemblies/linkage.gasm`.
+
+`tests/cache.rs` covers the cache layers: a baked model loads with no build and equals the built
+one, and its key is the key the loader computes; an edit to the model or a nested include
+misses the bake, builds once, then hits the disk cache, and `--check` reports it stale; a stamp
+file, the fit height, `centre` and the gcad version are in the key; an index from another gcad
+version is ignored; a wrong format tag, truncated or empty file (baked or cached) is rebuilt and
+replaced; cleanup removes a 31-day-old orphan and the oldest past the size cap and keeps the
+entries used this run and the shipped ones; the startup cleanup runs on its own; four apps
+writing one key leave one valid file; a second model with the same source is a memory hit; the
+`gcad-bevy-bake` CLI. With `KIDS_GAMES_ASSETS` set it bakes kids-free-games and prints the size
+and time table above.

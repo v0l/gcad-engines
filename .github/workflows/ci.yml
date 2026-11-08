@@ -65,7 +65,7 @@ jobs:
       - run: mkdir -p bin && tar -C bin -xf gcad-bin.tar
       - run: GCAD=$PWD/bin/gcad sh scripts/check.sh
         env:
-          SKIP: syntax godot fbx bevy
+          SKIP: syntax godot unity-cache fbx bevy
 
   godot:
     needs: gcad

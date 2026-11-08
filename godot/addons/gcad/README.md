@@ -26,6 +26,12 @@ gcad's `gcad2glb` command and loads the GLB it writes with Godot's `GLTFDocument
 Edit them in the Import dock and press Reimport. A build error (with the gcad line number)
 shows in the Output panel.
 
+Builds go through `gcad2glb --cache`, into `res://.godot/gcad-cache` (Project Settings >
+`gcad/cache_dir`; empty turns the cache off). A re-import with the same source, includes, options
+and gcad version reuses the GLB and builds nothing. The plugin records each import's key and,
+when the file system changes, re-imports a model whose key moved, so editing an included file
+re-imports the models that include it. See [docs/caching.md](../../../docs/caching.md).
+
 `addons/gcad/gcad.gd` has `build(tool, path, options)`, which returns the scene without the
 editor, for runtime use or tests.
 
@@ -34,4 +40,6 @@ editor, for runtime use or tests.
 `sh godot/check-addon.sh` (headless, needs `gcad2glb`): builds `rigged_creature.gcad` at height
 1 (one skin, clips `idle` and `walk`), `creature.gcad`, a solid part at height 2, refuses a file
 with a bad line, then runs `godot --headless --import` on a project with the plugin on and checks
-the editor imported `models/creature.gcad` with the `gcad.scene` importer.
+the editor imported `models/creature.gcad` with the `gcad.scene` importer, that a clean
+re-import used `.godot/gcad-cache/<key>.glb` with no build, that an edit rebuilds, and that
+editing an included file re-imports the model that includes it.

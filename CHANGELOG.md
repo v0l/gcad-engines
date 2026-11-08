@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Pin gcad 5a5fde3: `gcad2glb` has a content-addressed asset cache (`Sources::key` over the
+  source, includes, named files, options and gcad version; `--cache`, `key`, `bake`,
+  `bake --check`, `cache prune`). See `docs/caching.md`.
+- Godot addon: imports go through `gcad2glb --cache` into `.godot/gcad-cache`; an edited include
+  re-imports the models that include it.
+- Unity package: `.gcad`/`.gasm` in `Assets/` become `model.gcad.glb` through `gcad2glb --cache`
+  in `Library/gcad-cache` (`GcadCache`, `GcadSourceSync`).
+- `gcad-bevy`: the shared key; a shipped bake (`gcad-bevy-bake`, `assets/gcad-baked/`) read
+  through the asset reader; disk cache on Android and iOS; cleanup by age and size; corrupt files
+  rebuilt; `GcadStats` hit counters and bytes on disk.
 - Pin gcad 75e25dd (was the pre-split cc734a0). Scripts moved to `scripts/` and read gcad from
   `GCAD_REPO`; `fetch-gcad.sh`, `doctor.sh`, `check.sh`, `bump-gcad.sh`, `sync-cargo-pins.sh`.
 - `gcad-bevy`: Bevy 0.20 asset loader for `.gcad` and `.gasm` on gcad's `gcad2glb` library, with

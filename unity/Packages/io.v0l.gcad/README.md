@@ -27,12 +27,24 @@ Requirements: Unity 6000.4 or 6000.5, Built-In render pipeline, Linear colour sp
 3. Or right-click `model.fbx` > gcad > Build Adapted Prefab. The prefab goes into the sibling
    folder `<package>-gcad`; the FBX and its textures are not changed.
 
+## Plain `.gcad` and `.gasm` models
+
+Drop a `.gcad` or `.gasm` into `Assets/` and the package writes `model.gcad.glb` beside it with
+`gcad2glb --cache Library/gcad-cache` (on editor load, when a source is imported, and from
+Assets > gcad > Rebuild gcad Models). Import the GLB with glTFast (`com.unity.cloud.gltfast`,
+Unity's own glTF package: it imports `.glb` as a model asset with meshes, skins and clips and
+needs no FBX helper). The GLB is rewritten only when its bytes change, so Unity re-imports it
+only then, and a build runs only when the key misses (source, includes, flags, gcad version).
+Put `gcad2glb` flags for one model in its importer's `userData` (`--height 1 --centre`); set
+the tool path with the `GCAD2GLB` variable or the `io.v0l.gcad.gcad2glb` editor pref. See
+[docs/caching.md](../../../docs/caching.md).
+
 ## What is in it
 
 | folder | |
 |---|---|
 | `Runtime/` (`Gcad.Runtime`) | `GcadDeformation` (CPU skinning fallback that keeps gcad's blended deformation basis), `GcadMotionTrack`, `GcadRootMotionPlayer` (absolute-time root motion), `GcadSockets` (named attachment points), `GcadUvScroll`, `GcadUvScrollAnimation` |
-| `Editor/` (`Gcad.Editor`) | `GcadImporter` (menu, settings, postprocessor), `GcadMaterialAdapter` (materials from the helper's material contract), `GcadConsumerAdapter` (the `consumer unity version=1` profile: sockets, colliders, LOD groups), `GcadRootMotionAdapter`, `GcadUvScrollAdapter`, `GcadFbxMaterialContract`, `GcadFbxSkinWeights`, `GcadNormalTextureImport` |
+| `Editor/` (`Gcad.Editor`) | `GcadImporter` (menu, settings, postprocessor), `GcadCache` and `GcadSourceSync` (`.gcad`/`.gasm` to GLB through the `gcad2glb` cache), `GcadMaterialAdapter` (materials from the helper's material contract), `GcadConsumerAdapter` (the `consumer unity version=1` profile: sockets, colliders, LOD groups), `GcadRootMotionAdapter`, `GcadUvScrollAdapter`, `GcadFbxMaterialContract`, `GcadFbxSkinWeights`, `GcadNormalTextureImport` |
 | `Shaders/` | `gcad/PBR Opaque Mask`, `gcad/PBR Blend` and their includes |
 
 ## Status
