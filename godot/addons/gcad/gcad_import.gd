@@ -56,10 +56,14 @@ func _get_option_visibility(_path: String, _option: StringName, _options: Dictio
 
 func _import(source_file: String, save_path: String, options: Dictionary, _platform_variants: Array[String], _gen_files: Array[String]) -> Error:
 	var tool := str(ProjectSettings.get_setting("gcad/gcad2glb_path", "gcad2glb"))
-	var built := Gcad.build(tool, ProjectSettings.globalize_path(source_file), options)
+	var cache_dir := Gcad.cache_dir()
+	var built := Gcad.build(tool, ProjectSettings.globalize_path(source_file), options, cache_dir)
 	if built.error != OK:
 		push_error("gcad: %s: %s" % [source_file, built.message])
 		return built.error
+	if not cache_dir.is_empty():
+		Gcad.remember_key(cache_dir, source_file, built.key, options)
+	print("gcad: %s %s %s" % [source_file, "cached" if built.cached else "built", built.key])
 	var packed := PackedScene.new()
 	var result := packed.pack(built.scene)
 	built.scene.free()

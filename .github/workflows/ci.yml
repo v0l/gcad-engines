@@ -79,6 +79,10 @@ jobs:
       - run: mkdir -p bin && tar -C bin -xf gcad-bin.tar
       - run: GCAD=$PWD/bin/gcad sh scripts/check-godot.sh
       - run: GCAD=$PWD/bin/gcad GCAD2GLB=$PWD/bin/gcad2glb sh godot/check-addon.sh
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: GCAD2GLB=$PWD/bin/gcad2glb sh unity/check-cache.sh
 
   fbx:
     needs: gcad

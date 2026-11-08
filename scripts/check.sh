@@ -14,6 +14,7 @@ if want fixtures; then
     GCAD_MVP_CHECK=1 sh "$root/scripts/mvp.sh" plate.gasset
 fi
 if want godot; then sh "$root/scripts/check-godot.sh"; sh "$root/godot/check-addon.sh"; fi
+if want unity-cache; then sh "$root/unity/check-cache.sh"; fi
 if want fbx; then sh "$root/scripts/check-fbx.sh"; fi
 if want bevy; then
     (cd "$root/bevy" && cargo test --release && cargo test --release --features brep &&
