@@ -5,6 +5,7 @@ set -eu
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 find_gcad
+GCAD=$gcad sh "$root/scripts/game-assets.sh" prepare-fixtures >/dev/null
 tools="$root/target/game-assets-tools"
 build="$tools/material-extension-v12-build"
 [ -d "$tools/assimp/.git" ] && [ -d "$tools/ufbx/.git" ] || sh "$root/scripts/game-assets.sh" fetch-sources

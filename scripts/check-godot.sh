@@ -5,6 +5,7 @@ set -eu
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$root/scripts/env.sh"
 find_gcad
+GCAD=$gcad sh "$root/scripts/consumer-fixture.sh" >/dev/null
 godot=${GODOT:-$(sh "$root/godot/fetch-godot.sh")}
 version=$("$godot" --headless --version | tail -1)
 work="$root/target/godot-check"
