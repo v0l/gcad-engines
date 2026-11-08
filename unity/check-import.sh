@@ -104,13 +104,14 @@ if [ -n "${GCAD_LOD_COST_BASELINE:-}" ]; then
     cp -R "$GCAD_LOD_COST_BASELINE/textures" "$project/Assets/Baseline/"
 fi
 if [ -n "${GCAD_LOD_REFERENCE:-}" ]; then cp "$GCAD_LOD_REFERENCE" "$project/lod-reference.glb"; fi
-cp "$root/unity/"*.cs "$project/Assets/Editor/"
+gcad_package="$root/unity/Packages/io.v0l.gcad"
+cp "$root/unity/"*.cs "$gcad_package/Editor/"*.cs "$project/Assets/Editor/"
 mkdir -p "$project/Assets/GcadRuntime"
-cp "$root/unity/Runtime/"*.cs "$project/Assets/GcadRuntime/"
+cp "$gcad_package/Runtime/"*.cs "$project/Assets/GcadRuntime/"
 mkdir -p "$project/Assets/GcadPlayerTest"
 cp "$root/unity/PlayerTest/"*.cs "$project/Assets/GcadPlayerTest/"
 mkdir -p "$project/Assets/GcadShaders"
-cp "$root/unity/"*.shader "$root/unity/"*.cginc "$project/Assets/GcadShaders/"
+cp "$root/unity/"*.shader "$gcad_package/Shaders/"*.shader "$gcad_package/Shaders/"*.cginc "$project/Assets/GcadShaders/"
 cp "$package/model.fbx" "$project/Assets/Fixture/"
 if [ -f "$package/gcad-shaders.json" ]; then cp "$package/gcad-shaders.json" "$project/Assets/Fixture/"; fi
 if [ -f "$package/gcad-root-motion.json" ]; then cp "$package/gcad-root-motion.json" "$project/Assets/Fixture/"; fi
