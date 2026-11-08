@@ -29,9 +29,9 @@ then packaging/platform acceptance. Review: 2026-11-14.
 ### Complete skin influence inspection
 
 Native regression: `skin_inspection_preserves_small_weights_and_rejects_invalid_inputs`
-in `tests/fbx_helper_process.rs` passes with the refined GLB/FBX fixture. Set
+in `native-tests/tests/fbx_helper_process.rs` passes with the refined GLB/FBX fixture. Set
 `GCAD_FBX_HELPER`, `GCAD_FBX_INPUT` (GLB) and `GCAD_FBX_MODEL` (FBX) to absolute
-paths, then run `cargo test --features game-assets --test fbx_helper_process
+paths, then run `cd native-tests && cargo test --release --test fbx_helper_process
 skin_inspection_preserves_small_weights_and_rejects_invalid_inputs -- --ignored --exact`.
 It compares distinct complete weight values against the raw source accessor in
 both directions, including values below 0.001; validates palette references and
@@ -55,7 +55,7 @@ The Unity deformation adapter uses this readback to restore small weights lost
 at Unity's 0.001 import cutoff. It rejects unmatched/ambiguous recovery and
 preserves the imported source mesh. Dense full-source editor and Windows
 Mono/D3D11 player checks pass on Unity 6000.4.7f1 and 6000.5.4f1; detailed evidence
-and remaining bounds are in `../game-assets-unity/README.md`. Linux, Unicode paths
+and remaining bounds are in `../unity/README.md`. Linux, Unicode paths
 and broader helper process containment remain unverified. Review: 2026-11-14.
 
 ### Material properties
@@ -1308,7 +1308,7 @@ both inspection responses and unchanged input bytes. Run it with an absolute
 canonical exported fixture:
 
 ```sh
-cargo test --release --locked --features game-assets --test fbx_helper_process \
+cd native-tests && cargo test --release --test fbx_helper_process \
   relocated_helper_preserves_unicode_paths -- --ignored --exact
 ```
 

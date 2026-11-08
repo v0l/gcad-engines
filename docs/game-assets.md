@@ -51,7 +51,7 @@ with `-DGCAD_HELPER_PROTOCOL_TESTS=ON`, build the `gcad_fbx_protocol_fixture` ta
 then set `GCAD_FBX_PROTOCOL_FIXTURE` to its absolute native path and run:
 
 ```sh
-cargo test --locked --release --features game-assets --test fbx_helper_process -- --ignored
+(cd native-tests && cargo test --release -- --ignored)   # or sh scripts/check-fbx.sh
 ```
 
 This opt-in test checks malformed JSON, oversized stdout/stderr, nonzero exit,

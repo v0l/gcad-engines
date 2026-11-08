@@ -136,7 +136,7 @@ Full source-to-engine rendered comparisons remain pending.
 "Assets/NewAdaptedPackage")` creates new materials, per-slot PNG copies and a
 prefab referencing the original FBX meshes/rig. Install `FbxMaterialContract.cs`
 and `MaterialAdapter.cs` in the Unity project's Editor folder, install
-`Runtime/GcadDeformation.cs` outside any Editor folder, and put the two
+`Packages/io.v0l.gcad/Runtime/GcadDeformation.cs` outside any Editor folder, and put the two
 `GcadPbr*.shader` files plus `GcadPbr.cginc` and `GcadSampling.cginc` in its Assets. No automatic import
 postprocessor is installed by these adapter files. The helper executable is
 explicitly selected, identity-checked and run with output/deadline limits.
@@ -354,7 +354,7 @@ Call `GcadMaterialAdapter.Create(helper, modelPath, newOutput, true)` to opt int
 the experimental CPU deformation path. Configure the v12 FBX to **Import** both
 normals and tangents first; the adapter requires these options and does not
 modify them. The optional argument defaults to false, preserving the ordinary
-material-only adapter. Install `Runtime/GcadDeformation.cs` outside Editor folders.
+material-only adapter. Install `Packages/io.v0l.gcad/Runtime/GcadDeformation.cs` outside Editor folders.
 Use animation compression **Off** for the source-to-player acceptance profile
 below; the adapter does not alter the caller's animation quality settings.
 
@@ -515,7 +515,7 @@ more highly refined asset. Review: 2026-11-14.
 
 ### Explicit-time UV-scrolling runtime API
 
-`Runtime/GcadUvScroll.cs` drives the selected template through the production
+`Packages/io.v0l.gcad/Runtime/GcadUvScroll.cs` drives the selected template through the production
 PBR shaders' shared UV sampling path. It takes explicit seconds; it does not
 sample Unity's wall clock. Apply it to an owned material instance using the
 same time as your animation sampling. Default materials leave the transform
