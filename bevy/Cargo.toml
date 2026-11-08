@@ -1,0 +1,65 @@
+[package]
+name = "gcad-bevy"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Load gcad .gcad and .gasm files as Bevy scenes: meshes, materials, skins, clips, morph targets and LODs"
+repository = "https://github.com/v0l/gcad-engines"
+publish = false
+
+[workspace]
+
+[features]
+default = []
+brep = ["gcad2glb/brep"]
+parallel = ["gcad2glb/parallel"]
+hot-reload = ["bevy/file_watcher"]
+window = ["bevy/3d", "bevy/x11", "bevy/wayland", "bevy/tonemapping_luts"]
+
+[dependencies]
+gcad2glb = { git = "https://github.com/v0l/gcad", rev = "75e25dda66abf25347778ccb7c65b155d52d2195", default-features = false }
+serde = { version = "1", features = ["derive"] }
+bitcode = "0.6"
+bevy = { version = "0.20", default-features = false, features = [
+  "std",
+  "bevy_asset",
+  "bevy_log",
+  "bevy_pbr",
+  "bevy_animation",
+  "bevy_world_serialization",
+  "bevy_curve",
+  "morph",
+  "morph_animation",
+] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy = { version = "0.20", default-features = false, features = ["multi_threaded"] }
+
+[dev-dependencies]
+bevy = { version = "0.20", default-features = false, features = ["debug"] }
+
+[[example]]
+name = "hero"
+required-features = ["window"]
+
+[[example]]
+name = "props"
+required-features = ["window", "brep"]
+
+# Copied from gcad's Cargo.toml at GCAD_REV by scripts/sync-cargo-pins.sh.
+[patch.crates-io]
+egui_bench = { git = "https://github.com/v0l/egui_bench", rev = "e37138d6c698c1fd6de2284acf23f669b27ab0a9" }
+monstertruck = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-core = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-traits = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-derive = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-geometry = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-topology = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-mesh = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-meshing = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-modeling = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-solid = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-fillet = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-healing = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-assembly = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
+monstertruck-io = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
