@@ -18,7 +18,7 @@ hot-reload = ["bevy/file_watcher"]
 window = ["bevy/3d", "bevy/x11", "bevy/wayland", "bevy/tonemapping_luts"]
 
 [dependencies]
-gcad2glb = { git = "https://github.com/v0l/gcad", rev = "9d575873fea67c6bb30f7bafb5cf854958d2811e", default-features = false }
+gcad2glb = { git = "https://github.com/v0l/gcad", rev = "df083cdf6585b3a462d1b673157b254ef2a631dc", default-features = false }
 serde = { version = "1", features = ["derive"] }
 bitcode = "0.6"
 bevy = { version = "0.20", default-features = false, features = [
