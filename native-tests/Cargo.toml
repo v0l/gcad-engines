@@ -9,7 +9,7 @@ description = "Tests that drive the native FBX helper through gcad's game-asset 
 [workspace]
 
 [dependencies]
-gcad = { git = "https://github.com/v0l/gcad", rev = "6bbd11b2104ed5ebabb7cb4c302088586f468f82", default-features = false, features = ["game-assets"] }
+gcad = { git = "https://github.com/v0l/gcad", rev = "5b3cf50b4206aec9330711afa70faf0b8e6af11d", default-features = false, features = ["game-assets"] }
 
 [dev-dependencies]
 serde_json = "1"
