@@ -2689,6 +2689,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
+name = "e57"
+version = "0.11.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcfee41a50fbd70278c70cc477b8671ffe03951cba028cc2c057777a9ee6a3cc"
+dependencies = [
+ "roxmltree",
+]
+
+[[package]]
 name = "either"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2999,13 +3008,14 @@ dependencies = [
 
 [[package]]
 name = "gcad-brep"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "anyhow",
  "bitcode",
  "flate2",
  "gcad-calc",
+ "gcad-cloud",
  "gcad-geom",
  "gcad-host",
  "gcad-mesh",
@@ -3016,6 +3026,7 @@ dependencies = [
  "rayon",
  "roxmltree",
  "serde",
+ "serde_json",
  "sha2",
  "spade",
  "toml",
@@ -3024,8 +3035,8 @@ dependencies = [
 
 [[package]]
 name = "gcad-calc"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "anyhow",
  "serde",
@@ -3033,9 +3044,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "gcad-cloud"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
+dependencies = [
+ "anyhow",
+ "e57",
+ "gcad-parse",
+ "las",
+]
+
+[[package]]
 name = "gcad-geom"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "anyhow",
  "epaint_default_fonts",
@@ -3048,8 +3070,8 @@ dependencies = [
 
 [[package]]
 name = "gcad-host"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "rayon",
  "sha2",
@@ -3061,8 +3083,8 @@ dependencies = [
 
 [[package]]
 name = "gcad-mesh"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "anyhow",
  "gcad-parse",
@@ -3073,21 +3095,21 @@ dependencies = [
 
 [[package]]
 name = "gcad-parse"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "anyhow",
 ]
 
 [[package]]
 name = "gcad-version"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 
 [[package]]
 name = "gcad2glb"
-version = "0.6.1"
-source = "git+https://github.com/v0l/gcad?rev=df083cdf6585b3a462d1b673157b254ef2a631dc#df083cdf6585b3a462d1b673157b254ef2a631dc"
+version = "0.8.0"
+source = "git+https://github.com/v0l/gcad?rev=6bbd11b2104ed5ebabb7cb4c302088586f468f82#6bbd11b2104ed5ebabb7cb4c302088586f468f82"
 dependencies = [
  "gcad-brep",
  "gcad-mesh",
@@ -3806,6 +3828,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "364b49d1c98c07972e16fe1346463becc08bcd663da04e6e37ab1bea068dce6a"
 dependencies = [
  "regex-automata",
+]
+
+[[package]]
+name = "las"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8823fdc8209bf345e7ec7586f2e1f5ad0f978899ebb9e637c6d54e0f26cba0b"
+dependencies = [
+ "byteorder",
+ "chrono",
+ "laz",
+ "log",
+ "num-traits",
+ "thiserror 2.0.21",
+ "uuid",
+]
+
+[[package]]
+name = "laz"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a1bd8242fad6a61a7520b73d072ddf63dff1f3680e3f5c157b1dc6e8e5ab2ec"
+dependencies = [
+ "byteorder",
+ "num-traits",
 ]
 
 [[package]]
@@ -7501,5 +7548,5 @@ dependencies = [
 
 [[patch.unused]]
 name = "egui_bench"
-version = "0.9.6"
-source = "git+https://github.com/v0l/egui_bench?rev=e37138d6c698c1fd6de2284acf23f669b27ab0a9#e37138d6c698c1fd6de2284acf23f669b27ab0a9"
+version = "0.10.0"
+source = "git+https://github.com/v0l/egui_bench?rev=3c6481385c163ca7c1439fce3a6ba5ef5cd83c1e#3c6481385c163ca7c1439fce3a6ba5ef5cd83c1e"

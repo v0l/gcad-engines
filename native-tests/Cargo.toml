@@ -9,7 +9,7 @@ description = "Tests that drive the native FBX helper through gcad's game-asset 
 [workspace]
 
 [dependencies]
-gcad = { git = "https://github.com/v0l/gcad", rev = "df083cdf6585b3a462d1b673157b254ef2a631dc", default-features = false, features = ["game-assets"] }
+gcad = { git = "https://github.com/v0l/gcad", rev = "6bbd11b2104ed5ebabb7cb4c302088586f468f82", default-features = false, features = ["game-assets"] }
 
 [dev-dependencies]
 serde_json = "1"
@@ -21,7 +21,7 @@ game-assets = []
 
 # Copied from gcad's Cargo.toml at GCAD_REV by scripts/bump-gcad.sh.
 [patch.crates-io]
-egui_bench = { git = "https://github.com/v0l/egui_bench", rev = "e37138d6c698c1fd6de2284acf23f669b27ab0a9" }
+egui_bench = { git = "https://github.com/v0l/egui_bench", rev = "3c6481385c163ca7c1439fce3a6ba5ef5cd83c1e" }
 monstertruck = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
 monstertruck-core = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
 monstertruck-traits = { git = "https://github.com/v0l/monstertruck", rev = "07cd072a872e45d75d42246933c282fc6430240d" }
